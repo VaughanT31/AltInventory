@@ -1,0 +1,10 @@
+## Interface: 120100
+## Title: Alt Inventory
+## Author: CtrlShift_Zed
+## Notes: Shows per-alt item counts (Bags, Bank, Warband Bank) in item tooltips.
+## Version: 1.0.0
+## Category: CtrlShift_Zed
+## IconTexture: Interface\AddOns\AltInventory\icon
+## SavedVariables: AltInventoryDB
+
+AltInventory.lua
