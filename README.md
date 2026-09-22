@@ -4,7 +4,7 @@ A lightweight World of Warcraft addon that shows, in an item's tooltip, how many
 
 Built as a minimal alternative to TradeSkillMaster's inventory tooltip, without TSM's memory footprint or crash surface.
 
-- **Target patch:** 12.x
+- **Target patch:** 12.1.0 and up (Midnight)
 - **Interface version:** `120100`
 
 ## What it does

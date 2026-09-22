@@ -8,7 +8,7 @@ local ADDON_NAME = ...
 -- Bag ID lists
 --
 -- Built from Enum.BagIndex by name rather than hardcoded numbers, since
--- Blizzard has renamed/shuffled these across War Within patches. Missing
+-- Blizzard has renamed/shuffled these across recent patches. Missing
 -- names are silently skipped so the addon degrades gracefully instead of
 -- erroring if an ID isn't present on a given client build.
 -- ---------------------------------------------------------------------
