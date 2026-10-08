@@ -28,7 +28,12 @@ local BAGS = BuildBagList({
     "Backpack", "Bag_1", "Bag_2", "Bag_3", "Bag_4", "ReagentBag",
 })
 
+-- Patch 11.2 replaced the bag-slot character bank with purchasable tabs
+-- (CharacterBankTab_N) and dropped Bank/BankBag_N from the enum. Both sets
+-- are listed so whichever the client actually has gets scanned.
 local BANK_BAGS = BuildBagList({
+    "CharacterBankTab_1", "CharacterBankTab_2", "CharacterBankTab_3",
+    "CharacterBankTab_4", "CharacterBankTab_5", "CharacterBankTab_6",
     "Bank", "BankBag_1", "BankBag_2", "BankBag_3", "BankBag_4", "BankBag_5", "BankBag_6", "BankBag_7",
 })
 
@@ -83,12 +88,15 @@ local function ScanBags()
     end
 end
 
+-- Banks only update while open, so each scan stamps when it happened and
+-- the tooltip can say how old a bank count is.
 local function ScanBank()
     local data = GetCharData()
     wipe(data.bank)
     for _, bagID in ipairs(BANK_BAGS) do
         ScanContainer(bagID, data.bank)
     end
+    data.bankScannedAt = time()
 end
 
 local function ScanWarband()
@@ -96,6 +104,23 @@ local function ScanWarband()
     for _, bagID in ipairs(WARBAND_BAGS) do
         ScanContainer(bagID, AltInventoryDB.warband)
     end
+    AltInventoryDB.warbandScannedAt = time()
+end
+
+-- Counts under a day old are treated as current and get no age note.
+local STALE_AFTER = 24 * 60 * 60
+
+local function AgeText(scannedAt)
+    if not scannedAt then return nil end
+    local age = time() - scannedAt
+    if age < STALE_AFTER then return nil end
+    return math.floor(age / STALE_AFTER) .. "d ago"
+end
+
+local function WithAge(text, scannedAt)
+    local age = AgeText(scannedAt)
+    if not age then return text end
+    return text .. " |cff999999(" .. age .. ")|r"
 end
 
 -- ---------------------------------------------------------------------
@@ -127,7 +152,7 @@ local function OnTooltipSetItem(tooltip, tooltipData)
 
             local parts = {}
             if bags > 0 then table.insert(parts, "Bags: " .. bags) end
-            if bank > 0 then table.insert(parts, "Bank: " .. bank) end
+            if bank > 0 then table.insert(parts, WithAge("Bank: " .. bank, charData.bankScannedAt)) end
 
             local name = charKey:match("^[^%-]+") or charKey
             local classColor = RAID_CLASS_COLORS and RAID_CLASS_COLORS[charData.class]
@@ -150,7 +175,7 @@ local function OnTooltipSetItem(tooltip, tooltipData)
         tooltip:AddDoubleLine(line.name, line.text, 1, 1, 1, 0.8, 0.8, 0.8)
     end
     if warbandCount > 0 then
-        tooltip:AddDoubleLine("Warband Bank", tostring(warbandCount), 0.6, 0.8, 1, 0.8, 0.8, 0.8)
+        tooltip:AddDoubleLine("Warband Bank", WithAge(tostring(warbandCount), AltInventoryDB.warbandScannedAt), 0.6, 0.8, 1, 0.8, 0.8, 0.8)
     end
     tooltip:Show()
 end
@@ -162,6 +187,91 @@ TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipSetI
 -- ---------------------------------------------------------------------
 
 local bankOpen = false
+
+-- ---------------------------------------------------------------------
+-- Slash command
+--
+--   /altinv              rescan now and list tracked characters
+--   /altinv remove Name  forget a character (Name or Name-Realm)
+-- ---------------------------------------------------------------------
+
+local PREFIX = "|cffffd100Alt Inventory:|r "
+
+local function Print(msg)
+    print(PREFIX .. msg)
+end
+
+local function ListCharacters()
+    local keys = {}
+    for key in pairs(AltInventoryDB.chars) do table.insert(keys, key) end
+    table.sort(keys)
+
+    Print(#keys .. (#keys == 1 and " character" or " characters") .. " tracked.")
+    for _, key in ipairs(keys) do
+        local data = AltInventoryDB.chars[key]
+        local name = key
+        local classColor = RAID_CLASS_COLORS and RAID_CLASS_COLORS[data.class]
+        if classColor then name = classColor:WrapTextInColorCode(key) end
+        local bank = data.bankScannedAt and (AgeText(data.bankScannedAt) or "today") or "never opened"
+        print("  " .. name .. "  |cff999999bank: " .. bank .. "|r")
+    end
+    local warband = AltInventoryDB.warbandScannedAt and (AgeText(AltInventoryDB.warbandScannedAt) or "today") or "never opened"
+    print("  |cff99ccffWarband Bank|r  |cff999999" .. warband .. "|r")
+end
+
+-- Matches "Name-Realm" exactly, or a bare "Name" when only one realm has it.
+local function FindCharacter(input)
+    local wanted = input:lower()
+    local matches = {}
+    for key in pairs(AltInventoryDB.chars) do
+        local lower = key:lower()
+        if lower == wanted then return key end
+        if (lower:match("^[^%-]+") or lower) == wanted then table.insert(matches, key) end
+    end
+    if #matches == 1 then return matches[1] end
+    return nil, #matches
+end
+
+local function RemoveCharacter(input)
+    if input == "" then
+        Print("Usage: /altinv remove Name or Name-Realm")
+        return
+    end
+    local key, matchCount = FindCharacter(input)
+    if not key then
+        if matchCount and matchCount > 1 then
+            Print("More than one " .. input .. ", use Name-Realm.")
+        else
+            Print("No tracked character called " .. input .. ".")
+        end
+        return
+    end
+    if key == GetCharKey() then
+        Print("That's the character you're on, it would be added straight back.")
+        return
+    end
+    AltInventoryDB.chars[key] = nil
+    Print("Removed " .. key .. ".")
+end
+
+SLASH_ALTINVENTORY1 = "/altinv"
+SlashCmdList.ALTINVENTORY = function(msg)
+    local cmd, rest = (msg or ""):match("^%s*(%S*)%s*(.-)%s*$")
+    cmd = cmd:lower()
+    if cmd == "remove" then
+        RemoveCharacter(rest)
+    elseif cmd == "" or cmd == "scan" or cmd == "list" then
+        ScanBags()
+        if bankOpen then
+            ScanBank()
+            ScanWarband()
+        end
+        ListCharacters()
+    else
+        Print("/altinv - rescan and list characters")
+        Print("/altinv remove Name - forget a character")
+    end
+end
 
 local frame = CreateFrame("Frame")
 
@@ -185,8 +295,13 @@ frame:SetScript("OnEvent", function(_, event)
     elseif event == "PLAYER_ENTERING_WORLD" then
         ScanBags()
     elseif event == "BAG_UPDATE_DELAYED" then
+        -- Moving an item between bags and either bank only shows up here, so
+        -- both banks are rescanned whenever they're open, not just on open.
         ScanBags()
-        if bankOpen then ScanBank() end
+        if bankOpen then
+            ScanBank()
+            ScanWarband()
+        end
     elseif event == "BANKFRAME_OPENED" then
         bankOpen = true
         ScanBank()
@@ -196,6 +311,8 @@ frame:SetScript("OnEvent", function(_, event)
     elseif event == "PLAYERBANKSLOTS_CHANGED" then
         if bankOpen then ScanBank() end
     elseif event == "ACCOUNT_BANKING_ENABLED" or event == "BANK_TABS_CHANGED" then
-        ScanWarband()
+        -- Bank tabs read as empty while the bank is closed, so scanning then
+        -- would wipe the saved warband counts.
+        if bankOpen then ScanWarband() end
     end
 end)

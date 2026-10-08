@@ -32,6 +32,13 @@ This is a hard API limitation, not a design choice, it's the same reason Altohol
 
 Data is written to a `SavedVariables` table (`AltInventoryDB`) on logout and loaded by every character on login. That's the mechanism by which one character "sees" another's items.
 
+Bank and Warband Bank counts more than a day old show their age in the tooltip, for example `Bank: 20 (12d ago)`, so you know when a count may be out of date.
+
+## Commands
+
+- `/altinv`, rescan now and list every tracked character with when their bank was last opened.
+- `/altinv remove Name` (or `Name-Realm`), forget a deleted or transferred character.
+
 ## Installation
 
 1. Copy the `altinventory` folder into your WoW `Interface/AddOns/` directory.
