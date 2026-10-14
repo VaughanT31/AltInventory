@@ -1,4 +1,4 @@
-## Interface: 121500
+## Interface: 120105
 ## Title: Alt Inventory
 ## Author: CtrlShift_Zed
 ## Notes: Shows per-alt item counts (Bags, Bank, Warband Bank) in item tooltips.
