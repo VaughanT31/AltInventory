@@ -1,6 +1,6 @@
 # Alt Inventory
 
-A lightweight World of Warcraft addon that shows, in an item's tooltip, how many of that item each of your alts is holding, broken down by Bags, Character Bank, and Warband Bank.
+A lightweight World of Warcraft addon that shows, in an item's tooltip, how many of that item each of your alts is holding, broken down by Bags, Character Bank, Mail and Warband Bank. A search window finds any item across all of them by name.
 
 Built as a minimal alternative to TradeSkillMaster's inventory tooltip, without TSM's memory footprint or crash surface.
 
@@ -18,25 +18,30 @@ Bankalt                    Bank: 10
 Warband Bank               5
 ```
 
-Only three storage locations are tracked: Bags, Character Bank, and Warband (account) Bank. No auction house, no mail, no vendor pricing, deliberately narrow scope.
+Four storage locations are tracked: Bags, Character Bank, Mail (items attached to letters) and Warband (account) Bank. No auction house, no vendor pricing, deliberately narrow scope.
+
+## Search
+
+Click the magnifier in your bags' search box, or type `/altinv search`, and type part of an item's name. Every match across all your characters is listed with a count per character and place. Filter by character or by place (bags, bank, mail, warband), sort by name or total, and shift-click to link an item in chat. A number searches by item ID, and you can drop an item on the search box.
 
 ## How it works
 
 The game only exposes the currently logged-in character's inventory, so:
 
 - A character's data only exists after they've logged in with the addon installed.
-- Bank and Warband Bank counts only update once that bank UI has been opened at least once on that character.
+- Bank and Warband Bank counts only update once that bank UI has been opened at least once on that character, and Mail once the mailbox has been opened.
 - Warband Bank is account-wide and stored once, shown as a single line.
 
 This is a hard API limitation, not a design choice, it's the same reason Altoholic, DataStore, and TSM all require you to visit each alt.
 
 Data is written to a `SavedVariables` table (`AltInventoryDB`) on logout and loaded by every character on login. That's the mechanism by which one character "sees" another's items.
 
-Bank and Warband Bank counts more than a day old show their age in the tooltip, for example `Bank: 20 (12d ago)`, so you know when a count may be out of date.
+Bank, Mail and Warband Bank counts more than a day old show their age in the tooltip, for example `Bank: 20 (12d ago)`, so you know when a count may be out of date.
 
 ## Commands
 
-- `/altinv`, rescan now and list every tracked character with when their bank was last opened.
+- `/altinv`, rescan now and list every tracked character with when their bank and mailbox were last opened.
+- `/altinv search`, open the search window. `/altinv find potion` opens it searching for "potion".
 - `/altinv remove Name` (or `Name-Realm`), forget a deleted or transferred character.
 
 ## Installation
@@ -49,7 +54,11 @@ Bank and Warband Bank counts more than a day old show their age in the tooltip, 
 ## Files
 
 - `AltInventory.toc`, addon metadata, interface version, saved variables declaration.
-- `AltInventory.lua`, scanning, saved-variable storage, and tooltip hook.
+- `Core.lua`, saved-variable storage and scanning (bags, bank, mail, warband, item names).
+- `Tooltip.lua`, the tooltip lines.
+- `Search.lua`, finding items by name.
+- `UI/SearchWindow.lua`, the search window and the bag search button.
+- `AltInventory.lua`, events and the slash command.
 - `icon.tga`, addon icon shown in the in-game AddOn List.
 
 ## License
