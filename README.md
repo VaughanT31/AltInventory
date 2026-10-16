@@ -22,7 +22,7 @@ Four storage locations are tracked: Bags, Character Bank, Mail (items attached t
 
 ## Search
 
-Click the magnifier in your bags' search box, or type `/altinv search`, and type part of an item's name. Every match across all your characters is listed with a count per character and place. Filter by character or by place (bags, bank, mail, warband), sort by name or total, and shift-click to link an item in chat. A number searches by item ID, and you can drop an item on the search box.
+Click the magnifier in your bags' search box or the Alt Inventory button on the minimap (also in the minimap's addon list), or type `/altinv search`, and type part of an item's name. Every match across all your characters is listed with a count per character and place. Filter by character or by place (bags, bank, mail, warband), sort by name or total, and shift-click to link an item in chat. A number searches by item ID, and you can drop an item on the search box.
 
 ## How it works
 
@@ -43,6 +43,7 @@ Bank, Mail and Warband Bank counts more than a day old show their age in the too
 - `/altinv`, rescan now and list every tracked character with when their bank and mailbox were last opened.
 - `/altinv search`, open the search window. `/altinv find potion` opens it searching for "potion".
 - `/altinv remove Name` (or `Name-Realm`), forget a deleted or transferred character.
+- `/altinv minimap`, show or hide the minimap button.
 
 ## Installation
 
@@ -58,6 +59,7 @@ Bank, Mail and Warband Bank counts more than a day old show their age in the too
 - `Tooltip.lua`, the tooltip lines.
 - `Search.lua`, finding items by name.
 - `UI/SearchWindow.lua`, the search window and the bag search button.
+- `UI/MinimapButton.lua`, the minimap button and the addon list entry.
 - `AltInventory.lua`, events and the slash command.
 - `icon.tga`, addon icon shown in the in-game AddOn List.
 

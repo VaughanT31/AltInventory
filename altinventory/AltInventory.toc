@@ -2,13 +2,17 @@
 ## Title: Alt Inventory
 ## Author: CtrlShift_Zed
 ## Notes: Shows per-alt item counts (Bags, Bank, Mail, Warband Bank) in item tooltips, and searches every character's items by name.
-## Version: 1.3.0
+## Version: 1.4.0
 ## Category: CtrlShift_Zed
 ## IconTexture: Interface\AddOns\AltInventory\icon
 ## SavedVariables: AltInventoryDB
+## AddonCompartmentFunc: AltInventory_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: AltInventory_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: AltInventory_OnAddonCompartmentLeave
 
 Core.lua
 Tooltip.lua
 Search.lua
 UI\SearchWindow.lua
+UI\MinimapButton.lua
 AltInventory.lua

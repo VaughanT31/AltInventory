@@ -5,6 +5,7 @@
 --   Tooltip.lua            the tooltip lines
 --   Search.lua             finding items by name
 --   UI/SearchWindow.lua    the search window and the bag button
+--   UI/MinimapButton.lua   the minimap button and addon compartment entry
 -- This file: events and the slash command.
 
 local _, ns = ...
@@ -18,6 +19,7 @@ local bankOpen = false
 --   /altinv search       open the search window
 --   /altinv find Text    open the search window searching for Text
 --   /altinv remove Name  forget a character (Name or Name-Realm)
+--   /altinv minimap      show or hide the minimap button
 -- ---------------------------------------------------------------------
 
 local PREFIX = "|cffffd100Alt Inventory:|r "
@@ -85,6 +87,12 @@ SlashCmdList.ALTINVENTORY = function(msg)
         RemoveCharacter(rest)
     elseif cmd == "search" or cmd == "find" then
         ns.SearchWindow:Open(rest ~= "" and rest or nil)
+    elseif cmd == "minimap" then
+        if ns.MinimapButton:Toggle() then
+            Print("Minimap button shown.")
+        else
+            Print("Minimap button hidden. The addon list button on the minimap still opens the search, or type /altinv minimap to bring it back.")
+        end
     elseif cmd == "" or cmd == "scan" or cmd == "list" then
         ns.ScanBags()
         if bankOpen then
@@ -97,6 +105,7 @@ SlashCmdList.ALTINVENTORY = function(msg)
         Print("/altinv search - search all your characters")
         Print("/altinv find Name - search for an item")
         Print("/altinv remove Name - forget a character")
+        Print("/altinv minimap - show or hide the minimap button")
     end
 end
 
@@ -130,6 +139,7 @@ frame:SetScript("OnEvent", function(_, event)
         ns.ScanBags()
         ns.TidyNames()
         ns.SearchWindow:AddBagButton()
+        ns.MinimapButton:Create()
     elseif event == "PLAYER_ENTERING_WORLD" then
         ns.ScanBags()
     elseif event == "BAG_UPDATE_DELAYED" then
