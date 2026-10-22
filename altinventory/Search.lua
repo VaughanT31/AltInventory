@@ -2,12 +2,14 @@
 --
 -- Search.Find(text, filters) -> results, newest data only (what was saved
 -- the last time each character was on):
---   { { itemID, name, quality, icon, total,
+--   { { itemID or currencyID, name, quality, icon, total,
 --       holders = { { key, name, text, count }, ... },  -- one per character
 --       warband = count }, ... }
--- text matches anywhere in the item's name, ignoring case. A number, or an
--- item link, matches that item ID. filters: { char = "Name-Realm" | nil,
--- place = "bags" | "bank" | "mail" | "warband" | nil, sort = "name" | "total" }.
+-- text matches anywhere in the item's or currency's name, ignoring case. A
+-- number, or an item link, matches that item ID. filters: { char =
+-- "Name-Realm" | nil, place = "bags" | "bank" | "mail" | "warband" |
+-- "currency" | nil, sort = "name" | "total" }. Currencies are the
+-- transferable ones (Core.lua ScanCurrencies).
 
 local _, ns = ...
 
@@ -40,8 +42,9 @@ function Search.Find(text, filters)
     local names = AltInventoryDB.names or {}
     local places = nil
     if filters.place and filters.place ~= "warband" then places = { [filters.place] = true } end
-    local skipChars = filters.place == "warband"
+    local skipChars = filters.place == "warband" or filters.place == "currency"
     local skipWarband = filters.char ~= nil or (filters.place ~= nil and filters.place ~= "warband")
+    local withCurrencies = (filters.place == nil or filters.place == "currency") and query.text ~= nil
 
     -- Every item ID worth looking at: named items that match, plus the
     -- typed ID even if its name isn't known yet.
@@ -95,6 +98,31 @@ function Search.Find(text, filters)
         end
     end
 
+    if withCurrencies then
+        local Number = BreakUpLargeNumbers or tostring
+        local currencyNames = AltInventoryDB.currencyNames or {}
+        local byCurrency = {}
+        for charKey, charData in pairs(AltInventoryDB.chars or {}) do
+            if not filters.char or filters.char == charKey then
+                for currencyID, amount in pairs(charData.currencies or {}) do
+                    local entry = currencyNames[currencyID]
+                    if amount > 0 and Matches(query, nil, entry) then
+                        local result = byCurrency[currencyID]
+                        if not result then
+                            result = { currencyID = currencyID, name = entry.n, icon = entry.i, total = 0, holders = {}, warband = 0 }
+                            byCurrency[currencyID] = result
+                            byID["c" .. currencyID] = result
+                        end
+                        result.total = result.total + amount
+                        table.insert(result.holders, {
+                            key = charKey, name = ns.ClassName(charKey, charData.class), text = Number(amount), count = amount,
+                        })
+                    end
+                end
+            end
+        end
+    end
+
     local results = {}
     for _, result in pairs(byID) do
         table.sort(result.holders, function(a, b) return a.count > b.count or (a.count == b.count and a.key < b.key) end)
@@ -103,7 +131,9 @@ function Search.Find(text, filters)
     if filters.sort == "total" then
         table.sort(results, function(a, b) return a.total > b.total or (a.total == b.total and a.name < b.name) end)
     else
-        table.sort(results, function(a, b) return a.name < b.name or (a.name == b.name and a.itemID < b.itemID) end)
+        table.sort(results, function(a, b)
+            return a.name < b.name or (a.name == b.name and (a.itemID or 0) < (b.itemID or 0))
+        end)
     end
     local found = #results
     for i = #results, MAX_RESULTS + 1, -1 do results[i] = nil end

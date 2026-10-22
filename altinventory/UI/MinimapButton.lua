@@ -35,6 +35,15 @@ local function ShowTooltip(owner, anchor)
     GameTooltip:SetOwner(owner, anchor or "ANCHOR_LEFT")
     GameTooltip:SetText("Alt Inventory")
     GameTooltip:AddLine("Click to search all your characters, banks and mail.", 1, 1, 1, true)
+    local list, total, warband = ns.GoldList()
+    if #list > 0 then
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddDoubleLine("Gold", ns.GoldText(total), 1, 0.82, 0, 1, 0.82, 0)
+        for _, c in ipairs(list) do GameTooltip:AddDoubleLine(c.name, ns.GoldText(c.money), 1, 1, 1, 1, 1, 1) end
+        if warband then
+            GameTooltip:AddDoubleLine("|cff99ccffWarband Bank|r", ns.WithAge(ns.GoldText(warband), AltInventoryDB.warbandMoneyAt), 1, 1, 1, 1, 1, 1)
+        end
+    end
     if owner == Button.frame then
         GameTooltip:AddLine("Drag to move. /altinv minimap hides it.", 0.6, 0.6, 0.6, true)
     end

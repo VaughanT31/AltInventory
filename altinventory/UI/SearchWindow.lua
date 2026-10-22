@@ -20,6 +20,7 @@ local PLACE_LABELS = {
     { key = "bank", label = "Bank" },
     { key = "mail", label = "Mail" },
     { key = "warband", label = "Warband bank" },
+    { key = "currency", label = "Currencies" },
 }
 
 local BACKDROP = {
@@ -64,7 +65,7 @@ end
 
 local function InitRow(row, data)
     EnsureRegions(row)
-    row.itemID = data.itemID
+    row.itemID, row.currencyID = data.itemID, data.currencyID
     row.text:ClearAllPoints()
     if data.kind == "item" then
         local result = data.result
@@ -92,13 +93,22 @@ local function InitRow(row, data)
     end
     row:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetItemByID(self.itemID)
+        if self.currencyID then
+            GameTooltip:SetCurrencyByID(self.currencyID)
+        else
+            GameTooltip:SetItemByID(self.itemID)
+        end
         GameTooltip:Show()
     end)
     row:SetScript("OnLeave", function() GameTooltip:Hide() end)
     row:SetScript("OnClick", function(self)
         if IsModifiedClick and IsModifiedClick("CHATLINK") then
-            local link = ItemLink(self.itemID)
+            local link
+            if self.currencyID then
+                link = C_CurrencyInfo.GetCurrencyLink and C_CurrencyInfo.GetCurrencyLink(self.currencyID, 0)
+            else
+                link = ItemLink(self.itemID)
+            end
             if link then ChatEdit_InsertLink(link) end
         end
     end)
@@ -249,9 +259,9 @@ function Window:Refresh()
     local results, found = ns.Search.Find(text, filters)
     local elements = {}
     for _, result in ipairs(results) do
-        elements[#elements + 1] = { kind = "item", itemID = result.itemID, result = result }
+        elements[#elements + 1] = { kind = "item", itemID = result.itemID, currencyID = result.currencyID, result = result }
         for _, holder in ipairs(result.holders) do
-            elements[#elements + 1] = { kind = "holder", itemID = result.itemID, holder = holder }
+            elements[#elements + 1] = { kind = "holder", itemID = result.itemID, currencyID = result.currencyID, holder = holder }
         end
         if result.warband > 0 then
             elements[#elements + 1] = { kind = "warband", itemID = result.itemID, count = result.warband }

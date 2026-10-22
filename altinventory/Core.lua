@@ -6,9 +6,13 @@
 --   AltInventoryDB = {
 --     chars = { ["Name-Realm"] = { class, bags = { [itemID] = count },
 --                                  bank = {...}, bankScannedAt,
---                                  mail = {...}, mailScannedAt } },
+--                                  mail = {...}, mailScannedAt,
+--                                  money (copper),
+--                                  currencies = { [currencyID] = amount } } },
 --     warband = { [itemID] = count }, warbandScannedAt,
+--     warbandMoney, warbandMoneyAt,
 --     names = { [itemID] = { n = name, q = quality, i = icon } },
+--     currencyNames = { [currencyID] = { n = name, i = icon } },
 --     window = { point, x, y },
 --   }
 --
@@ -118,6 +122,7 @@ function ns.InitDB()
     AltInventoryDB.chars = AltInventoryDB.chars or {}
     AltInventoryDB.warband = AltInventoryDB.warband or {}
     AltInventoryDB.names = AltInventoryDB.names or {}
+    AltInventoryDB.currencyNames = AltInventoryDB.currencyNames or {}
 end
 
 function ns.ScanBags()
@@ -165,6 +170,97 @@ function ns.ScanMail()
         end
     end
     data.mailScannedAt = time()
+end
+
+-- ---------------------------------------------------------------------
+-- Gold and currencies
+-- ---------------------------------------------------------------------
+
+function ns.ScanMoney()
+    GetCharData().money = GetMoney()
+end
+
+-- The Warband Bank's gold can be read without the bank open.
+function ns.ScanWarbandMoney()
+    if not (C_Bank and C_Bank.FetchDepositedMoney and Enum.BankType and Enum.BankType.Account) then return end
+    local ok, money = pcall(C_Bank.FetchDepositedMoney, Enum.BankType.Account)
+    if ok and type(money) == "number" then
+        AltInventoryDB.warbandMoney = money
+        AltInventoryDB.warbandMoneyAt = time()
+    end
+end
+
+local function CurrencyID(index, info)
+    if info.currencyID then return info.currencyID end
+    local link = C_CurrencyInfo.GetCurrencyListLink and C_CurrencyInfo.GetCurrencyListLink(index)
+    return link and tonumber(link:match("currency:(%d+)"))
+end
+
+-- Only currencies each character keeps for itself that can be moved to
+-- another character (the game's Transfer option): account-wide ones are
+-- the same everywhere, and the rest can't be moved, so neither is worth a
+-- per-character list.
+function ns.IsTransferable(info)
+    return info and not info.isHeader and info.isAccountTransferable and not info.isAccountWide
+end
+
+-- Collapsed headers hide their currencies from the list, so they're opened
+-- for the scan and closed again after; left alone while the currency tab
+-- is up, so it doesn't jump about under the mouse.
+function ns.ScanCurrencies()
+    local C = C_CurrencyInfo
+    if not (C and C.GetCurrencyListSize and C.GetCurrencyListInfo) then return end
+    local opened = {}
+    if C.ExpandCurrencyList and not (TokenFrame and TokenFrame:IsVisible()) then
+        local i = 1
+        while i <= C.GetCurrencyListSize() do
+            local info = C.GetCurrencyListInfo(i)
+            if info and info.isHeader and not info.isHeaderExpanded then
+                C.ExpandCurrencyList(i, true)
+                opened[info.name] = true
+            end
+            i = i + 1
+        end
+    end
+    local found = {}
+    for index = 1, C.GetCurrencyListSize() do
+        local info = C.GetCurrencyListInfo(index)
+        if ns.IsTransferable(info) then
+            local id = CurrencyID(index, info)
+            if id then
+                AltInventoryDB.currencyNames[id] = { n = info.name, i = info.iconFileID }
+                if (info.quantity or 0) > 0 then found[id] = info.quantity end
+            end
+        end
+    end
+    for index = C.GetCurrencyListSize(), 1, -1 do
+        local info = C.GetCurrencyListInfo(index)
+        if info and info.isHeader and info.isHeaderExpanded and opened[info.name] then
+            C.ExpandCurrencyList(index, false)
+        end
+    end
+    GetCharData().currencies = found
+end
+
+-- 1234567 copper as "123g" with a gold icon, thousands separated.
+function ns.GoldText(copper)
+    local gold = math.floor((copper or 0) / 10000)
+    local text = BreakUpLargeNumbers and BreakUpLargeNumbers(gold) or tostring(gold)
+    return text .. "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t"
+end
+
+-- Characters with gold, most first, the total, and the Warband Bank's.
+function ns.GoldList()
+    local list, total = {}, 0
+    for key, data in pairs(AltInventoryDB and AltInventoryDB.chars or {}) do
+        if data.money then
+            list[#list + 1] = { key = key, name = ns.ClassName(key, data.class), money = data.money }
+            total = total + data.money
+        end
+    end
+    table.sort(list, function(a, b) return a.money > b.money or (a.money == b.money and a.key < b.key) end)
+    local warband = AltInventoryDB and AltInventoryDB.warbandMoney
+    return list, total + (warband or 0), warband
 end
 
 -- ---------------------------------------------------------------------

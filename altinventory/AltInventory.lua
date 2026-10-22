@@ -1,6 +1,7 @@
 -- Alt Inventory
 -- Tracks per-alt item counts (Bags, Character Bank, Mail, Warband Bank),
--- appends them to item tooltips, and searches them by name.
+-- gold and transferable currencies, appends them to tooltips, and searches
+-- them by name.
 --   Core.lua               saved data and scanning
 --   Tooltip.lua            the tooltip lines
 --   Search.lua             finding items by name
@@ -38,10 +39,14 @@ local function ListCharacters()
         if classColor then name = classColor:WrapTextInColorCode(key) end
         local bank = data.bankScannedAt and (ns.AgeText(data.bankScannedAt) or "today") or "never opened"
         local mail = data.mailScannedAt and (ns.AgeText(data.mailScannedAt) or "today") or "never opened"
-        print("  " .. name .. "  |cff999999bank: " .. bank .. ", mail: " .. mail .. "|r")
+        local gold = data.money and (ns.GoldText(data.money) .. "  ") or ""
+        print("  " .. name .. "  " .. gold .. "|cff999999bank: " .. bank .. ", mail: " .. mail .. "|r")
     end
     local warband = AltInventoryDB.warbandScannedAt and (ns.AgeText(AltInventoryDB.warbandScannedAt) or "today") or "never opened"
-    print("  |cff99ccffWarband Bank|r  |cff999999" .. warband .. "|r")
+    local warbandGold = AltInventoryDB.warbandMoney and (ns.GoldText(AltInventoryDB.warbandMoney) .. "  ") or ""
+    print("  |cff99ccffWarband Bank|r  " .. warbandGold .. "|cff999999" .. warband .. "|r")
+    local _, total = ns.GoldList()
+    Print("Gold on all characters: " .. ns.GoldText(total))
 end
 
 -- Matches "Name-Realm" exactly, or a bare "Name" when only one realm has it.
@@ -95,6 +100,8 @@ SlashCmdList.ALTINVENTORY = function(msg)
         end
     elseif cmd == "" or cmd == "scan" or cmd == "list" then
         ns.ScanBags()
+        ns.ScanMoney()
+        ns.ScanWarbandMoney()
         if bankOpen then
             ns.ScanBank()
             ns.ScanWarband()
@@ -130,8 +137,29 @@ SafeRegisterEvent("BANK_TABS_CHANGED")
 SafeRegisterEvent("MAIL_SHOW")
 SafeRegisterEvent("MAIL_INBOX_UPDATE")
 SafeRegisterEvent("MAIL_CLOSED")
+SafeRegisterEvent("PLAYER_MONEY")
+SafeRegisterEvent("ACCOUNT_MONEY")
+SafeRegisterEvent("CURRENCY_DISPLAY_UPDATE")
+SafeRegisterEvent("PLAYER_REGEN_ENABLED")
 
 local mailOpen = false
+
+-- Currency updates come in bursts (looting, quest turn-ins), so the list
+-- is read once things settle, and never in combat.
+-- Opening and closing headers for the scan fires updates of its own, so
+-- those are ignored for a moment after each scan.
+local currencyPending, scannedAt = false, 0
+local function QueueCurrencyScan()
+    if currencyPending or GetTime() - scannedAt < 3 then return end
+    currencyPending = true
+    C_Timer.After(2, function()
+        if InCombatLockdown() then return end -- PLAYER_REGEN_ENABLED picks it up
+        currencyPending = false
+        ns.ScanCurrencies()
+        scannedAt = GetTime()
+        ns.SearchWindow:QueueRefresh()
+    end)
+end
 
 frame:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_LOGIN" then
@@ -140,6 +168,10 @@ frame:SetScript("OnEvent", function(_, event)
         ns.TidyNames()
         ns.SearchWindow:AddBagButton()
         ns.MinimapButton:Create()
+        ns.ScanMoney()
+        ns.ScanWarbandMoney()
+        -- The currency list fills in a moment after login.
+        QueueCurrencyScan()
     elseif event == "PLAYER_ENTERING_WORLD" then
         ns.ScanBags()
     elseif event == "BAG_UPDATE_DELAYED" then
@@ -175,5 +207,16 @@ frame:SetScript("OnEvent", function(_, event)
         end
     elseif event == "MAIL_CLOSED" then
         mailOpen = false
+    elseif event == "PLAYER_MONEY" then
+        ns.ScanMoney()
+    elseif event == "ACCOUNT_MONEY" then
+        ns.ScanWarbandMoney()
+    elseif event == "CURRENCY_DISPLAY_UPDATE" then
+        QueueCurrencyScan()
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        if currencyPending then
+            currencyPending = false
+            QueueCurrencyScan()
+        end
     end
 end)

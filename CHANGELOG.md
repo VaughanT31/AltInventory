@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+- **Gold on every character:** hover the minimap button for each character's gold, the Warband Bank's and the total. `/altinv` lists it too.
+- **Currencies you can transfer:** hover a currency that can be moved between characters (in the currency tab or a link) to see how much each character has, with the total. The search window finds them by name as well, with a *Currencies* filter, so you can see who has the most before using the game's Transfer.
+- Characters' gold and currencies update the next time you log into each one.
+
 ## 1.4.0
 
 - **Minimap button:** click it to open the search window. Drag it around the minimap to move it, or hide it with `/altinv minimap`.
