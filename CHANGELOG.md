@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.0
+
+- **Play time:** a new tab in the Alt Inventory window shows how long you've played, by character, class, role or faction, as bars with each one's share and the total. Hover a bar for the time and how many characters it counts.
+- Each character's time is read when you log into it, without the usual /played lines in chat, and kept up to date while you play. Characters you haven't logged into since updating show as not recorded yet.
+
 ## 1.5.0
 
 - **Gold on every character:** hover the minimap button for each character's gold, the Warband Bank's and the total. `/altinv` lists it too.

@@ -5,7 +5,8 @@
 --   Core.lua               saved data and scanning
 --   Tooltip.lua            the tooltip lines
 --   Search.lua             finding items by name
---   UI/SearchWindow.lua    the search window and the bag button
+--   Played.lua             time played per character
+--   UI/SearchWindow.lua    the search window (Search and Play time) and the bag button
 --   UI/MinimapButton.lua   the minimap button and addon compartment entry
 -- This file: events and the slash command.
 
@@ -141,6 +142,9 @@ SafeRegisterEvent("PLAYER_MONEY")
 SafeRegisterEvent("ACCOUNT_MONEY")
 SafeRegisterEvent("CURRENCY_DISPLAY_UPDATE")
 SafeRegisterEvent("PLAYER_REGEN_ENABLED")
+SafeRegisterEvent("TIME_PLAYED_MSG")
+SafeRegisterEvent("PLAYER_LOGOUT")
+SafeRegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 
 local mailOpen = false
 
@@ -161,7 +165,7 @@ local function QueueCurrencyScan()
     end)
 end
 
-frame:SetScript("OnEvent", function(_, event)
+frame:SetScript("OnEvent", function(_, event, ...)
     if event == "PLAYER_LOGIN" then
         ns.InitDB()
         ns.ScanBags()
@@ -172,6 +176,9 @@ frame:SetScript("OnEvent", function(_, event)
         ns.ScanWarbandMoney()
         -- The currency list fills in a moment after login.
         QueueCurrencyScan()
+        ns.Played:Note()
+        -- After other addons' login requests, so the answer is ours.
+        C_Timer.After(6, function() ns.Played:Request(true) end)
     elseif event == "PLAYER_ENTERING_WORLD" then
         ns.ScanBags()
     elseif event == "BAG_UPDATE_DELAYED" then
@@ -207,6 +214,14 @@ frame:SetScript("OnEvent", function(_, event)
         end
     elseif event == "MAIL_CLOSED" then
         mailOpen = false
+    elseif event == "TIME_PLAYED_MSG" then
+        ns.Played:OnTimePlayed(...)
+        ns.SearchWindow:QueueRefresh()
+    elseif event == "PLAYER_LOGOUT" then
+        ns.Played:Save()
+    elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
+        local unit = ...
+        if unit == nil or unit == "player" then ns.Played:Note() end
     elseif event == "PLAYER_MONEY" then
         ns.ScanMoney()
     elseif event == "ACCOUNT_MONEY" then

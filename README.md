@@ -22,6 +22,8 @@ Four storage locations are tracked: Bags, Character Bank, Mail (items attached t
 
 It also keeps each character's gold (hover the minimap button for every character's gold, the Warband Bank's and the total) and their currencies that can be transferred between characters: hover one to see how much each character has, or search for it by name with the *Currencies* filter.
 
+The window's *Play time* tab shows how long you've played on each character, and added up by class, role (from each character's current spec) or faction. A character's time is read when you log into it.
+
 ## Search
 
 Click the magnifier in your bags' search box or the Alt Inventory button on the minimap (also in the minimap's addon list), or type `/altinv search`, and type part of an item's name. Every match across all your characters is listed with a count per character and place. Filter by character or by place (bags, bank, mail, warband), sort by name or total, and shift-click to link an item in chat. A number searches by item ID, and you can drop an item on the search box.

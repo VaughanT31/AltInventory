@@ -1,5 +1,7 @@
 -- Alt Inventory - the search window: "where is my X?" across every
--- character, their banks and mail, and the warband bank.
+-- character, their banks and mail, and the warband bank. A second tab,
+-- Play time, shows time played by character, class, role or faction
+-- (Played.lua).
 --
 -- Opened with /altinv search (or /altinv find <text>) and from the
 -- magnifier button on the bags' search box, which carries over whatever
@@ -12,6 +14,8 @@ ns.SearchWindow = Window
 
 local WIDTH, HEIGHT = 470, 500
 local ITEM_ROW, HOLDER_ROW = 26, 17
+local BAR_ROW = 22
+local BAR_LABEL, BAR_RIGHT = 120, 112
 local REFRESH_DELAY = 0.15
 
 local PLACE_LABELS = {
@@ -114,6 +118,69 @@ local function InitRow(row, data)
     end)
 end
 
+-- Play time rows: name, a bar as long as its share of the most played,
+-- and "20.5%  47d 4h".
+local function InitBar(row, data)
+    if not row.bar then
+        row.highlight = row:CreateTexture(nil, "HIGHLIGHT")
+        row.highlight:SetAllPoints()
+        row.highlight:SetColorTexture(1, 1, 1, 0.06)
+        row.label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        row.label:SetPoint("LEFT", 6, 0)
+        row.label:SetWidth(BAR_LABEL - 10)
+        row.label:SetJustifyH("LEFT")
+        row.label:SetWordWrap(false)
+        row.back = row:CreateTexture(nil, "BACKGROUND")
+        row.back:SetPoint("LEFT", BAR_LABEL, 0)
+        row.back:SetPoint("RIGHT", -BAR_RIGHT, 0)
+        row.back:SetHeight(14)
+        row.back:SetColorTexture(1, 1, 1, 0.05)
+        row.bar = row:CreateTexture(nil, "ARTWORK")
+        row.bar:SetPoint("LEFT", BAR_LABEL, 0)
+        row.bar:SetHeight(14)
+        row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.right:SetPoint("RIGHT", -6, 0)
+        row.right:SetJustifyH("RIGHT")
+    end
+    local e = data.entry
+    local r, g, b = e.color[1], e.color[2], e.color[3]
+    row.label:SetText(e.label)
+    row.label:SetTextColor(r, g, b)
+    row.bar:SetColorTexture(r, g, b, 0.85)
+    row.bar:SetWidth(math.max(1, data.width * e.seconds / math.max(1, data.top)))
+    row.right:SetText(("|cffffd100%.1f%%|r  %s"):format(100 * e.seconds / math.max(1, data.total), ns.Played.Format(e.seconds)))
+    row:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(e.label, r, g, b)
+        GameTooltip:AddLine(ns.Played.Format(e.seconds), 1, 1, 1)
+        if data.group ~= "character" then
+            GameTooltip:AddLine(e.count .. (e.count == 1 and " character" or " characters"), 0.8, 0.8, 0.8)
+        end
+        GameTooltip:Show()
+    end)
+    row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
+-- Tabs at the top: gold and underlined when chosen.
+local function Tab(parent, text)
+    local tab = CreateFrame("Button", nil, parent)
+    tab:SetHeight(20)
+    tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    tab.text:SetPoint("CENTER", 0, 1)
+    tab.text:SetText(text)
+    tab:SetWidth(tab.text:GetStringWidth() + 18)
+    tab.line = tab:CreateTexture(nil, "ARTWORK")
+    tab.line:SetColorTexture(1, 0.82, 0, 0.8)
+    tab.line:SetHeight(2)
+    tab.line:SetPoint("BOTTOMLEFT", 6, 0)
+    tab.line:SetPoint("BOTTOMRIGHT", -6, 0)
+    function tab:SetActive(on)
+        self.text:SetTextColor(on and 1 or 0.6, on and 0.82 or 0.6, on and 0 or 0.6)
+        self.line:SetShown(on)
+    end
+    return tab
+end
+
 -- Building -------------------------------------------------------------
 
 local function Dropdown(parent, width)
@@ -153,9 +220,15 @@ function Window:Build()
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 12, -10)
     title:SetText("Alt Inventory")
-    local sub = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    sub:SetPoint("LEFT", title, "RIGHT", 8, -1)
-    sub:SetText("Search all your characters")
+    self.tabs = {}
+    local previous
+    for _, t in ipairs({ { "search", "Search" }, { "played", "Play time" } }) do
+        local tab = Tab(f, t[2])
+        if previous then tab:SetPoint("LEFT", previous, "RIGHT", 2, 0) else tab:SetPoint("LEFT", title, "RIGHT", 10, -1) end
+        tab:SetScript("OnClick", function() Window:SetView(t[1]) end)
+        self.tabs[t[1]] = tab
+        previous = tab
+    end
 
     local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
     close:SetPoint("TOPRIGHT", 2, 2)
@@ -240,6 +313,85 @@ function Window:Build()
     empty:SetPoint("TOPRIGHT", scrollBox, "TOPRIGHT", -10, -20)
     empty:SetJustifyH("CENTER")
     self.empty = empty
+    self.searchParts = { box, charDrop, placeDrop, sortDrop, line, scrollBox, scrollBar, empty }
+
+    -- Play time
+    self.group = AltInventoryDB.playedGroup or "character"
+    local groupDrop = Dropdown(f, 160)
+    groupDrop:SetPoint("TOPLEFT", 10, -38)
+    groupDrop:SetupMenu(function(_, root)
+        for _, key in ipairs(ns.Played.GROUP_ORDER) do
+            root:CreateRadio(ns.Played.GROUP_LABELS[key], function() return Window.group == key end, function()
+                Window.group = key
+                AltInventoryDB.playedGroup = key
+                Window:Refresh()
+            end)
+        end
+    end)
+    local playLine = f:CreateTexture(nil, "ARTWORK")
+    playLine:SetColorTexture(1, 0.82, 0, 0.2)
+    playLine:SetHeight(1)
+    playLine:SetPoint("TOPLEFT", 10, -70)
+    playLine:SetPoint("TOPRIGHT", -10, -70)
+    local playBox = CreateFrame("Frame", nil, f, "WowScrollBoxList")
+    playBox:SetPoint("TOPLEFT", 10, -76)
+    playBox:SetPoint("BOTTOMRIGHT", -26, 30)
+    local playBar = CreateFrame("EventFrame", nil, f, "MinimalScrollBar")
+    playBar:SetPoint("TOPLEFT", playBox, "TOPRIGHT", 6, 0)
+    playBar:SetPoint("BOTTOMLEFT", playBox, "BOTTOMRIGHT", 6, 0)
+    local playView = CreateScrollBoxListLinearView()
+    playView:SetElementExtent(BAR_ROW)
+    playView:SetElementInitializer("Button", InitBar)
+    ScrollUtil.InitScrollBoxListWithScrollBar(playBox, playBar, playView)
+    self.playBox = playBox
+    local playEmpty = f:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+    playEmpty:SetPoint("TOPLEFT", playBox, "TOPLEFT", 10, -20)
+    playEmpty:SetPoint("TOPRIGHT", playBox, "TOPRIGHT", -10, -20)
+    playEmpty:SetJustifyH("CENTER")
+    self.playEmpty = playEmpty
+    self.playedParts = { groupDrop, playLine, playBox, playBar, playEmpty }
+
+    self.view = AltInventoryDB.windowView == "played" and "played" or "search"
+    self:ShowView()
+end
+
+function Window:ShowView()
+    for _, part in ipairs(self.searchParts) do part:SetShown(self.view == "search") end
+    for _, part in ipairs(self.playedParts) do part:SetShown(self.view == "played") end
+    for key, tab in pairs(self.tabs) do tab:SetActive(key == self.view) end
+end
+
+function Window:SetView(view)
+    if not self.frame then self:Build() end
+    self.view = view
+    AltInventoryDB.windowView = view
+    self:ShowView()
+    if view == "played" then
+        -- This character's time, if login couldn't ask for it quietly.
+        local data = AltInventoryDB.chars[ns.GetCharKey()]
+        if data and not data.played then ns.Played:Request(false) end
+    else
+        self.box:SetFocus()
+    end
+    self:Refresh()
+end
+
+function Window:RefreshPlayed()
+    local list, total, missing = ns.Played.List(self.group)
+    local top = list[1] and list[1].seconds or 1
+    local width = math.max(40, self.playBox:GetWidth() - BAR_LABEL - BAR_RIGHT)
+    local elements = {}
+    for _, entry in ipairs(list) do
+        elements[#elements + 1] = { entry = entry, top = top, total = total, width = width, group = self.group }
+    end
+    self.playBox:SetDataProvider(CreateDataProvider(elements), ScrollBoxConstants.RetainScrollPosition)
+    self.playEmpty:SetText(#list == 0 and "No time played recorded yet. It's read when each character logs in." or "")
+    local text = "|cffffd100Total: " .. ns.Played.Format(total) .. "|r"
+    if missing > 0 then
+        text = text .. ("  |cff999999%d character%s not recorded yet: log in on %s once.|r"):format(missing,
+            missing == 1 and "" or "s", missing == 1 and "it" or "each")
+    end
+    self.status:SetText(text)
 end
 
 -- Refreshing ------------------------------------------------------------
@@ -255,6 +407,7 @@ end
 
 function Window:Refresh()
     if not self.frame or not self.frame:IsShown() then return end
+    if self.view == "played" then return self:RefreshPlayed() end
     local text = self.box:GetText()
     local results, found = ns.Search.Find(text, filters)
     local elements = {}
@@ -290,9 +443,12 @@ end
 function Window:Open(text)
     if not self.frame then self:Build() end
     self.frame:Show()
-    if text then self.box:SetText(text) end
-    self.box:SetFocus()
-    self:Refresh()
+    -- Opening with something to find goes to Search.
+    if text then
+        self.box:SetText(text)
+        return self:SetView("search")
+    end
+    self:SetView(self.view)
 end
 
 function Window:Toggle()
