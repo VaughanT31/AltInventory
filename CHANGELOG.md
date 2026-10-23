@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1
+
+- Fixed: an error at logout ("attempt to concatenate a nil value") while saving your play time. The game sometimes no longer knows your realm name by then, so the character is now remembered from login.
+
 ## 1.6.0
 
 - **Play time:** a new tab in the Alt Inventory window shows how long you've played, by character, class, role or faction, as bars with each one's share and the total. Hover a bar for the time and how many characters it counts.

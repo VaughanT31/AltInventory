@@ -98,8 +98,15 @@ local function ScanContainer(bagID, target)
     end
 end
 
+-- Remembered once known: at logout the game can return nil for the realm.
+local charKey
 function ns.GetCharKey()
-    return UnitName("player") .. "-" .. GetNormalizedRealmName()
+    if charKey then return charKey end
+    local name = UnitName("player")
+    local realm = GetNormalizedRealmName() or (GetRealmName() or ""):gsub("[%s%-]", "")
+    if not name or realm == "" then return nil end
+    charKey = name .. "-" .. realm
+    return charKey
 end
 
 local function GetCharData()
