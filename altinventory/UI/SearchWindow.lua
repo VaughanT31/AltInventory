@@ -270,8 +270,10 @@ function Window:Build()
     placeDrop:SetPoint("LEFT", charDrop, "RIGHT", 6, 0)
     placeDrop:SetupMenu(function(_, root)
         for _, place in ipairs(PLACE_LABELS) do
-            root:CreateRadio(place.label, function() return filters.place == place.key end,
-                function() filters.place = place.key; Window:Refresh() end)
+            if place.key ~= "warband" or ns.HAS_WARBAND then
+                root:CreateRadio(place.label, function() return filters.place == place.key end,
+                    function() filters.place = place.key; Window:Refresh() end)
+            end
         end
     end)
 
@@ -468,9 +470,19 @@ function Window:AddBagButton()
     button:SetFrameLevel(bagBox:GetFrameLevel() + 5)
     local icon = button:CreateTexture(nil, "ARTWORK")
     icon:SetAllPoints()
-    icon:SetAtlas("common-search-magnifyingglass")
+    -- The Classic clients may not have this atlas: then the old magnifying glass texture.
+    local hasAtlas = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo("common-search-magnifyingglass")
+    if hasAtlas then
+        icon:SetAtlas("common-search-magnifyingglass")
+    else
+        icon:SetTexture("Interface\\Common\\UI-Searchbox-Icon")
+    end
     icon:SetVertexColor(1, 0.82, 0)
-    button:SetHighlightAtlas("common-search-magnifyingglass", "ADD")
+    if hasAtlas then
+        button:SetHighlightAtlas("common-search-magnifyingglass", "ADD")
+    else
+        button:SetHighlightTexture("Interface\\Common\\UI-Searchbox-Icon", "ADD")
+    end
     button:SetScript("OnClick", function()
         local text = bagBox:GetText()
         Window:Open(text ~= "" and text or nil)

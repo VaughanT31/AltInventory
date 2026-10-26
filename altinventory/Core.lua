@@ -42,22 +42,33 @@ local function BuildBagList(names)
     return list
 end
 
+-- One addon for every game version (1.7.0): Retail, WoW Forever, MoP
+-- Classic, TBC Anniversary and Classic Era all list their bags here by
+-- name, and a name a client doesn't have is skipped. The keyring is Era
+-- and TBC's; the reagent bag and bank tabs are Retail and Forever's.
 local BAGS = BuildBagList({
-    "Backpack", "Bag_1", "Bag_2", "Bag_3", "Bag_4", "ReagentBag",
+    "Backpack", "Bag_1", "Bag_2", "Bag_3", "Bag_4", "ReagentBag", "Keyring",
 })
 
 -- Patch 11.2 replaced the bag-slot character bank with purchasable tabs
 -- (CharacterBankTab_N) and dropped Bank/BankBag_N from the enum. Both sets
--- are listed so whichever the client actually has gets scanned.
+-- are listed so whichever the client actually has gets scanned (Forever
+-- has up to nine tabs, the Classic versions the old bank and its bags).
 local BANK_BAGS = BuildBagList({
     "CharacterBankTab_1", "CharacterBankTab_2", "CharacterBankTab_3",
     "CharacterBankTab_4", "CharacterBankTab_5", "CharacterBankTab_6",
+    "CharacterBankTab_7", "CharacterBankTab_8", "CharacterBankTab_9",
     "Bank", "BankBag_1", "BankBag_2", "BankBag_3", "BankBag_4", "BankBag_5", "BankBag_6", "BankBag_7",
 })
 
 local WARBAND_BAGS = BuildBagList({
     "AccountBankTab_1", "AccountBankTab_2", "AccountBankTab_3", "AccountBankTab_4", "AccountBankTab_5",
+    "AccountBankTab_6", "AccountBankTab_7", "AccountBankTab_8", "AccountBankTab_9",
 })
+
+-- The Warband Bank is only on Retail and Forever. The Classic clients know
+-- the bag names but have no such bank, so it's told by its gold API.
+ns.HAS_WARBAND = (C_Bank and C_Bank.FetchDepositedMoney and Enum.BankType and Enum.BankType.Account) and true or false
 
 -- Places a character's items can be, in the order they're shown.
 ns.PLACES = { "bags", "bank", "mail" }
@@ -152,6 +163,7 @@ function ns.ScanBank()
 end
 
 function ns.ScanWarband()
+    if not ns.HAS_WARBAND then return end
     wipe(AltInventoryDB.warband)
     for _, bagID in ipairs(WARBAND_BAGS) do
         ScanContainer(bagID, AltInventoryDB.warband)
@@ -197,26 +209,48 @@ function ns.ScanWarbandMoney()
     end
 end
 
-local function CurrencyID(index, info)
+-- The currency list: C_CurrencyInfo on Retail and Forever, the older
+-- global functions on the Classic versions, wrapped to look the same.
+local function CurrencyAPI()
+    local C = C_CurrencyInfo
+    if C and C.GetCurrencyListSize and C.GetCurrencyListInfo then return C end
+    if not (GetCurrencyListSize and GetCurrencyListInfo) then return nil end
+    return {
+        GetCurrencyListSize = GetCurrencyListSize,
+        GetCurrencyListInfo = function(index)
+            local name, isHeader, isExpanded, _, _, count, icon = GetCurrencyListInfo(index)
+            if not name then return nil end
+            return { name = name, isHeader = isHeader, isHeaderExpanded = isExpanded, quantity = count, iconFileID = icon }
+        end,
+        ExpandCurrencyList = ExpandCurrencyList and function(index, expand) ExpandCurrencyList(index, expand and 1 or 0) end,
+        GetCurrencyListLink = GetCurrencyListLink,
+    }
+end
+
+local function CurrencyID(C, index, info)
     if info.currencyID then return info.currencyID end
-    local link = C_CurrencyInfo.GetCurrencyListLink and C_CurrencyInfo.GetCurrencyListLink(index)
+    local link = C.GetCurrencyListLink and C.GetCurrencyListLink(index)
     return link and tonumber(link:match("currency:(%d+)"))
 end
 
 -- Only currencies each character keeps for itself that can be moved to
 -- another character (the game's Transfer option): account-wide ones are
 -- the same everywhere, and the rest can't be moved, so neither is worth a
--- per-character list.
+-- per-character list. The Classic versions have no warband: no transfers
+-- or account-wide currencies (the fields are there, always false), so
+-- there every currency is each character's own and all of them count.
 function ns.IsTransferable(info)
-    return info and not info.isHeader and info.isAccountTransferable and not info.isAccountWide
+    if not info or info.isHeader then return false end
+    if not ns.HAS_WARBAND then return true end
+    return info.isAccountTransferable and not info.isAccountWide
 end
 
 -- Collapsed headers hide their currencies from the list, so they're opened
 -- for the scan and closed again after; left alone while the currency tab
 -- is up, so it doesn't jump about under the mouse.
 function ns.ScanCurrencies()
-    local C = C_CurrencyInfo
-    if not (C and C.GetCurrencyListSize and C.GetCurrencyListInfo) then return end
+    local C = CurrencyAPI()
+    if not C then return end
     local opened = {}
     if C.ExpandCurrencyList and not (TokenFrame and TokenFrame:IsVisible()) then
         local i = 1
@@ -233,7 +267,7 @@ function ns.ScanCurrencies()
     for index = 1, C.GetCurrencyListSize() do
         local info = C.GetCurrencyListInfo(index)
         if ns.IsTransferable(info) then
-            local id = CurrencyID(index, info)
+            local id = CurrencyID(C, index, info)
             if id then
                 AltInventoryDB.currencyNames[id] = { n = info.name, i = info.iconFileID }
                 if (info.quantity or 0) > 0 then found[id] = info.quantity end

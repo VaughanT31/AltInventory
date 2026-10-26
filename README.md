@@ -7,6 +7,10 @@ Built as a minimal alternative to TradeSkillMaster's inventory tooltip, without 
 - **Target patch:** 12.1.0 and up (Midnight)
 - **Interface version:** `120100`
 
+## Game versions
+
+One download runs on every version: Retail, WoW Forever, Mists of Pandaria Classic, Burning Crusade Anniversary and Classic Era (Hardcore and Season of Discovery too). Each version keeps its own saved data, as the game does. On Classic the keyring is counted (Classic Era and Burning Crusade), every currency counts per character, and the Warband Bank only shows where the game has one (Retail and WoW Forever).
+
 ## What it does
 
 Mouse over an item and Alt Inventory appends lines to the tooltip listing each character that holds it and where:

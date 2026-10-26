@@ -127,7 +127,9 @@ local GROUPS = {
         return faction, (faction == "?" and "Unknown" or faction), FACTION_COLORS[faction] or GREY
     end,
 }
-Played.GROUP_ORDER = { "character", "class", "role", "faction" }
+-- Classic Era has no specializations, so no roles to group by.
+local hasSpecs = (C_SpecializationInfo and C_SpecializationInfo.GetSpecialization) or GetSpecialization
+Played.GROUP_ORDER = hasSpecs and { "character", "class", "role", "faction" } or { "character", "class", "faction" }
 Played.GROUP_LABELS = { character = "By character", class = "By class", role = "By role", faction = "By faction" }
 
 -- Time played grouped: { { key, label, color, seconds, count }, ... } most

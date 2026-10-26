@@ -1,8 +1,8 @@
-## Interface: 120105
+## Interface: 120105, 16001, 50504, 20506, 11509
 ## Title: Alt Inventory
 ## Author: CtrlShift_Zed
-## Notes: Shows per-alt item counts (Bags, Bank, Mail, Warband Bank) in item tooltips, and searches every character's items by name.
-## Version: 1.6.1
+## Notes: Shows per-alt item counts (Bags, Bank, Mail, Warband Bank) in item tooltips, and searches every character's items by name. Retail, WoW Forever and Classic.
+## Version: 1.7.0
 ## Category: CtrlShift_Zed
 ## IconTexture: Interface\AddOns\AltInventory\icon
 ## SavedVariables: AltInventoryDB

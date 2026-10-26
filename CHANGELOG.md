@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.0
+
+- **Every version of WoW:** the same addon now runs on Retail, WoW Forever, Mists of Pandaria Classic, Burning Crusade Anniversary and Classic Era (Hardcore and Season of Discovery too). Tooltips, search, gold and play time work on all of them.
+- **Classic:** your keyring is counted on Classic Era and Burning Crusade, and every currency counts per character, since Classic has none shared across your account (Badges of Justice, Justice and Valor Points and so on). The Warband Bank only shows where the game has one (Retail and WoW Forever), and play time groups by character, class and faction on Classic Era, which has no specs.
+- **WoW Forever:** its larger character and Warband Bank (up to nine tabs each) are counted in full.
+
 ## 1.6.1
 
 - Fixed: an error at logout ("attempt to concatenate a nil value") while saving your play time. The game sometimes no longer knows your realm name by then, so the character is now remembered from login.

@@ -43,9 +43,11 @@ local function ListCharacters()
         local gold = data.money and (ns.GoldText(data.money) .. "  ") or ""
         print("  " .. name .. "  " .. gold .. "|cff999999bank: " .. bank .. ", mail: " .. mail .. "|r")
     end
-    local warband = AltInventoryDB.warbandScannedAt and (ns.AgeText(AltInventoryDB.warbandScannedAt) or "today") or "never opened"
-    local warbandGold = AltInventoryDB.warbandMoney and (ns.GoldText(AltInventoryDB.warbandMoney) .. "  ") or ""
-    print("  |cff99ccffWarband Bank|r  " .. warbandGold .. "|cff999999" .. warband .. "|r")
+    if ns.HAS_WARBAND then
+        local warband = AltInventoryDB.warbandScannedAt and (ns.AgeText(AltInventoryDB.warbandScannedAt) or "today") or "never opened"
+        local warbandGold = AltInventoryDB.warbandMoney and (ns.GoldText(AltInventoryDB.warbandMoney) .. "  ") or ""
+        print("  |cff99ccffWarband Bank|r  " .. warbandGold .. "|cff999999" .. warband .. "|r")
+    end
     local _, total = ns.GoldList()
     Print("Gold on all characters: " .. ns.GoldText(total))
 end
