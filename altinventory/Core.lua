@@ -223,7 +223,8 @@ local function CurrencyAPI()
             return { name = name, isHeader = isHeader, isHeaderExpanded = isExpanded, quantity = count, iconFileID = icon }
         end,
         ExpandCurrencyList = ExpandCurrencyList and function(index, expand) ExpandCurrencyList(index, expand and 1 or 0) end,
-        GetCurrencyListLink = GetCurrencyListLink,
+        -- Classic keeps this one in C_CurrencyInfo, as its currency window does.
+        GetCurrencyListLink = (C and C.GetCurrencyListLink) or GetCurrencyListLink,
     }
 end
 

@@ -109,11 +109,13 @@ local function InitRow(row, data)
         if IsModifiedClick and IsModifiedClick("CHATLINK") then
             local link
             if self.currencyID then
-                link = C_CurrencyInfo.GetCurrencyLink and C_CurrencyInfo.GetCurrencyLink(self.currencyID, 0)
+                link = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyLink and C_CurrencyInfo.GetCurrencyLink(self.currencyID, 0)
             else
                 link = ItemLink(self.itemID)
             end
-            if link then ChatEdit_InsertLink(link) end
+            -- ChatEdit_InsertLink is only kept as a deprecated fallback now.
+            local insert = (ChatFrameUtil and ChatFrameUtil.InsertLink) or ChatEdit_InsertLink
+            if link and insert then insert(link) end
         end
     end)
 end

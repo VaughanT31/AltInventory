@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.1
+
+- **Classic currencies:** they're now saved on Mists of Pandaria Classic, Burning Crusade Anniversary and Classic Era. 1.7.0 looked for each currency's ID in the wrong place there and saved none.
+- Shift-clicking a result in the search window puts its link in chat the current way, so it keeps working when the game removes the old way.
+
 ## 1.7.0
 
 - **Every version of WoW:** the same addon now runs on Retail, WoW Forever, Mists of Pandaria Classic, Burning Crusade Anniversary and Classic Era (Hardcore and Season of Discovery too). Tooltips, search, gold and play time work on all of them.
