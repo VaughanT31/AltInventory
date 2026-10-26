@@ -2,6 +2,8 @@
 
 A lightweight World of Warcraft addon that shows, in an item's tooltip, how many of that item each of your alts is holding, broken down by Bags, Character Bank, Mail and Warband Bank. A search window finds any item across all of them by name.
 
+**New here?** The [wiki](wiki/Home.md) explains every feature step by step (also on the [website](https://ctrlshiftzed.com/wiki/alt-inventory/)). Questions it doesn't answer: ask on [Discord](https://discord.gg/wz7fw6jM9Z).
+
 Built as a minimal alternative to TradeSkillMaster's inventory tooltip, without TSM's memory footprint or crash surface.
 
 - **Target patch:** 12.1.0 and up (Midnight)
