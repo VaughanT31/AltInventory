@@ -30,6 +30,8 @@ It also keeps each character's gold (hover the minimap button for every characte
 
 The window's *Play time* tab shows how long you've played on each character, and added up by class, role (from each character's current spec) or faction. A character's time is read when you log into it.
 
+The *Characters* tab (`/altinv characters`) shows each character's item level, free bag slots, concentration, Moxie, profession cooldowns and this patch's currencies. Beside the profession window, the reagent finder lists who else holds the materials for the recipe or order on screen (`/altinv reagents` turns it off and on).
+
 ## Search
 
 Click the magnifier in your bags' search box or the Alt Inventory button on the minimap (also in the minimap's addon list), or type `/altinv search`, and type part of an item's name. Every match across all your characters is listed with a count per character and place. Filter by character or by place (bags, bank, mail, warband), sort by name or total, and shift-click to link an item in chat. A number searches by item ID, and you can drop an item on the search box.

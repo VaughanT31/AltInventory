@@ -8,7 +8,8 @@
 --                                  bank = {...}, bankScannedAt,
 --                                  mail = {...}, mailScannedAt,
 --                                  money (copper),
---                                  currencies = { [currencyID] = amount } } },
+--                                  currencies = { [currencyID] = amount },
+--                                  and what Characters.lua keeps } },
 --     warband = { [itemID] = count }, warbandScannedAt,
 --     warbandMoney, warbandMoneyAt,
 --     names = { [itemID] = { n = name, q = quality, i = icon } },
@@ -264,9 +265,22 @@ function ns.ScanCurrencies()
             i = i + 1
         end
     end
-    local found = {}
+    local found, patch = {}, {}
+    local inPatch = false
     for index = 1, C.GetCurrencyListSize() do
         local info = C.GetCurrencyListInfo(index)
+        -- This patch's currencies, for the Characters tab: anything under
+        -- a top-level header for this expansion or season. Account-wide ones
+        -- read the same everywhere, so they're not kept per character.
+        if info and info.isHeader then
+            if (info.currencyListDepth or 0) == 0 then inPatch = ns.Characters.IsPatchHeader(info.name) end
+        elseif info and inPatch and ns.HAS_WARBAND and not info.isAccountWide then
+            local id = CurrencyID(C, index, info)
+            if id then
+                AltInventoryDB.currencyNames[id] = { n = info.name, i = info.iconFileID }
+                if (info.quantity or 0) > 0 then patch[id] = info.quantity end
+            end
+        end
         if ns.IsTransferable(info) then
             local id = CurrencyID(C, index, info)
             if id then
@@ -281,7 +295,9 @@ function ns.ScanCurrencies()
             C.ExpandCurrencyList(index, false)
         end
     end
-    GetCharData().currencies = found
+    local data = GetCharData()
+    data.currencies = found
+    if ns.HAS_WARBAND then data.patch = patch end
 end
 
 -- 1234567 copper as "123g" with a gold icon, thousands separated.

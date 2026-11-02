@@ -10,6 +10,7 @@ Also on the website: [Alt Inventory wiki](https://ctrlshiftzed.com/wiki/alt-inve
 - [Item tooltips](Item-tooltips.md): What the Alt Inventory lines in an item's tooltip mean, and why some counts show their age.
 - [Searching your characters](Searching-your-characters.md): Find any item across every character, bank and mailbox by typing part of its name.
 - [Gold and currencies](Gold-and-currencies.md): Every character's gold at a glance, and who holds the currencies you can move between characters.
+- [Characters](Characters.md): Item level, bag space, concentration, Moxie, cooldowns and this patch's currencies for every character, and who holds a recipe's materials.
 - [Play time](Play-time.md): How long you've played each character, and added up by class, role or faction.
 - [Game versions](Game-versions.md): One download runs on Retail, WoW Forever and every Classic version. Here's what differs.
 - [Commands](Commands.md): Every Alt Inventory chat command.

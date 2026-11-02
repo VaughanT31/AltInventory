@@ -18,6 +18,6 @@ Currencies shared by your whole account are the same on every character, so they
 
 ---
 
-Previous: [Searching your characters](Searching-your-characters.md) | [Wiki home](Home.md) | Next: [Play time](Play-time.md)
+Previous: [Searching your characters](Searching-your-characters.md) | [Wiki home](Home.md) | Next: [Characters](Characters.md)
 
 Didn't find your answer? Ask in the [CtrlShiftZed Discord](https://discord.gg/wz7fw6jM9Z).

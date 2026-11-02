@@ -6,7 +6,9 @@
 --   Tooltip.lua            the tooltip lines
 --   Search.lua             finding items by name
 --   Played.lua             time played per character
---   UI/SearchWindow.lua    the search window (Search and Play time) and the bag button
+--   Characters.lua         bag space, item level, concentration, Moxie, cooldowns, this patch's currencies
+--   UI/SearchWindow.lua    the search window (Search, Characters and Play time) and the bag button
+--   UI/ReagentFinder.lua   who else holds a recipe's materials, beside the profession window
 --   UI/MinimapButton.lua   the minimap button and addon compartment entry
 -- This file: events and the slash command.
 
@@ -95,6 +97,11 @@ SlashCmdList.ALTINVENTORY = function(msg)
         RemoveCharacter(rest)
     elseif cmd == "search" or cmd == "find" then
         ns.SearchWindow:Open(rest ~= "" and rest or nil)
+    elseif cmd == "characters" or cmd == "chars" then
+        ns.SearchWindow:Open()
+        ns.SearchWindow:SetView("characters")
+    elseif cmd == "reagents" then
+        Print(ns.ReagentFinder:Toggle() and "Reagent finder on, beside the profession window." or "Reagent finder off.")
     elseif cmd == "minimap" then
         if ns.MinimapButton:Toggle() then
             Print("Minimap button shown.")
@@ -115,6 +122,8 @@ SlashCmdList.ALTINVENTORY = function(msg)
         Print("/altinv search - search all your characters")
         Print("/altinv find Name - search for an item")
         Print("/altinv remove Name - forget a character")
+        Print("/altinv characters - bag space, item level, concentration, Moxie, cooldowns and currencies")
+        Print("/altinv reagents - turn the reagent finder off or on")
         Print("/altinv minimap - show or hide the minimap button")
     end
 end
@@ -147,8 +156,12 @@ SafeRegisterEvent("PLAYER_REGEN_ENABLED")
 SafeRegisterEvent("TIME_PLAYED_MSG")
 SafeRegisterEvent("PLAYER_LOGOUT")
 SafeRegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+SafeRegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+SafeRegisterEvent("TRADE_SKILL_SHOW")
+SafeRegisterEvent("TRADE_SKILL_LIST_UPDATE")
 
 local mailOpen = false
+local professionScannedAt = 0
 
 -- Currency updates come in bursts (looting, quest turn-ins), so the list
 -- is read once things settle, and never in combat.
@@ -162,6 +175,8 @@ local function QueueCurrencyScan()
         if InCombatLockdown() then return end -- PLAYER_REGEN_ENABLED picks it up
         currencyPending = false
         ns.ScanCurrencies()
+        ns.Characters.ScanMoxie()
+        ns.Characters.ScanConcentration()
         scannedAt = GetTime()
         ns.SearchWindow:QueueRefresh()
     end)
@@ -176,17 +191,29 @@ frame:SetScript("OnEvent", function(_, event, ...)
         ns.MinimapButton:Create()
         ns.ScanMoney()
         ns.ScanWarbandMoney()
+        ns.ReagentFinder:Init()
         -- The currency list fills in a moment after login.
         QueueCurrencyScan()
+        C_Timer.After(3, ns.Characters.ScanAll)
         ns.Played:Note()
         -- After other addons' login requests, so the answer is ours.
         C_Timer.After(6, function() ns.Played:Request(true) end)
     elseif event == "PLAYER_ENTERING_WORLD" then
         ns.ScanBags()
+    elseif event == "PLAYER_EQUIPMENT_CHANGED" then
+        ns.Characters.ScanItemLevel()
+    elseif event == "TRADE_SKILL_SHOW" or event == "TRADE_SKILL_LIST_UPDATE" then
+        -- The list update fires in bursts, and this reads every recipe.
+        if not InCombatLockdown() and GetTime() - professionScannedAt > 5 then
+            professionScannedAt = GetTime()
+            ns.Characters.ScanOpenProfession()
+            ns.SearchWindow:QueueRefresh()
+        end
     elseif event == "BAG_UPDATE_DELAYED" then
         -- Moving an item between bags and either bank only shows up here, so
         -- both banks are rescanned whenever they're open, not just on open.
         ns.ScanBags()
+        ns.Characters.ScanBagSpace()
         if bankOpen then
             ns.ScanBank()
             ns.ScanWarband()

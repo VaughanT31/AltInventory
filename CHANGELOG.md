@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0
+
+- **A new Characters tab:** every character at a glance: item level, free bag and reagent bag slots, concentration, Moxie, profession cooldowns and this patch's currencies. Open it from the window or with `/altinv characters`. Everything is as of the last time each character was on.
+- **Concentration keeps counting:** it fills while you're away, so the tab works out where it should be by now and marks that as an estimate. Concentration and cooldowns appear once you've opened that profession on that character.
+- **Reagent finder:** beside the profession window, a small panel shows which of your other characters and your Warband Bank hold the materials for the recipe or crafting order on screen. Materials the customer brings are left out, and it only shows when someone else has something. `/altinv reagents` turns it off and on. Retail and WoW Forever only.
+
 ## 1.7.1
 
 - **Classic currencies:** they're now saved on Mists of Pandaria Classic, Burning Crusade Anniversary and Classic Era. 1.7.0 looked for each currency's ID in the wrong place there and saved none.

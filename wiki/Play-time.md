@@ -13,6 +13,6 @@ On Classic Era there are no specs, so the role grouping isn't there.
 
 ---
 
-Previous: [Gold and currencies](Gold-and-currencies.md) | [Wiki home](Home.md) | Next: [Game versions](Game-versions.md)
+Previous: [Characters](Characters.md) | [Wiki home](Home.md) | Next: [Game versions](Game-versions.md)
 
 Didn't find your answer? Ask in the [CtrlShiftZed Discord](https://discord.gg/wz7fw6jM9Z).

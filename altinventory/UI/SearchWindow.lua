@@ -1,6 +1,7 @@
 -- Alt Inventory - the search window: "where is my X?" across every
--- character, their banks and mail, and the warband bank. A second tab,
--- Play time, shows time played by character, class, role or faction
+-- character, their banks and mail, and the warband bank. Characters shows
+-- each one's bag space, item level, concentration and so on (Characters.lua),
+-- and Play time shows time played by character, class, role or faction
 -- (Played.lua).
 --
 -- Opened with /altinv search (or /altinv find <text>) and from the
@@ -163,6 +164,52 @@ local function InitBar(row, data)
     row:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
 
+-- Characters tab rows: a character, a section title, or a line.
+local INFO_ROWS = { character = 36, section = 18, line = 16 }
+
+local function InitInfo(row, data)
+    if not row.text then
+        row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        row.text:SetJustifyH("LEFT")
+        row.text:SetWordWrap(false)
+        row.sub = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.sub:SetJustifyH("LEFT")
+        row.sub:SetWordWrap(false)
+        row.sub:SetPoint("BOTTOMLEFT", 6, 3)
+        row.sub:SetPoint("RIGHT", -6, 0)
+        row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.right:SetPoint("RIGHT", -6, 0)
+        row.right:SetJustifyH("RIGHT")
+        row.icon = row:CreateTexture(nil, "ARTWORK")
+        row.icon:SetSize(14, 14)
+        row.icon:SetPoint("LEFT", 22, 0)
+        row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    end
+    row.text:ClearAllPoints()
+    row.icon:SetShown(data.icon ~= nil)
+    row.icon:SetTexture(data.icon or 134400)
+    row.sub:SetText("")
+    row.right:SetText("")
+    if data.kind == "character" then
+        row.text:SetFontObject("GameFontHighlight")
+        row.text:SetPoint("TOPLEFT", 6, -3)
+        row.text:SetPoint("RIGHT", -6, 0)
+        row.text:SetText(data.block.name .. " |cff999999" .. (data.block.key:match("%-(.+)$") or "") .. "|r")
+        row.sub:SetText("|cffcccccc" .. data.block.summary .. "|r")
+    elseif data.kind == "section" then
+        row.text:SetFontObject("GameFontNormalSmall")
+        row.text:SetPoint("LEFT", 14, 0)
+        row.text:SetPoint("RIGHT", -6, 0)
+        row.text:SetText(data.title)
+    else
+        row.text:SetFontObject("GameFontHighlightSmall")
+        row.text:SetPoint("LEFT", data.icon and 40 or 22, 0)
+        row.text:SetPoint("RIGHT", row.right, "LEFT", -8, 0)
+        row.text:SetText(data.line.label)
+        row.right:SetText(data.line.value or "")
+    end
+end
+
 -- Tabs at the top: gold and underlined when chosen.
 local function Tab(parent, text)
     local tab = CreateFrame("Button", nil, parent)
@@ -224,7 +271,7 @@ function Window:Build()
     title:SetText("Alt Inventory")
     self.tabs = {}
     local previous
-    for _, t in ipairs({ { "search", "Search" }, { "played", "Play time" } }) do
+    for _, t in ipairs({ { "search", "Search" }, { "characters", "Characters" }, { "played", "Play time" } }) do
         local tab = Tab(f, t[2])
         if previous then tab:SetPoint("LEFT", previous, "RIGHT", 2, 0) else tab:SetPoint("LEFT", title, "RIGHT", 10, -1) end
         tab:SetScript("OnClick", function() Window:SetView(t[1]) end)
@@ -355,13 +402,29 @@ function Window:Build()
     self.playEmpty = playEmpty
     self.playedParts = { groupDrop, playLine, playBox, playBar, playEmpty }
 
-    self.view = AltInventoryDB.windowView == "played" and "played" or "search"
+    -- Characters
+    local infoBox = CreateFrame("Frame", nil, f, "WowScrollBoxList")
+    infoBox:SetPoint("TOPLEFT", 10, -38)
+    infoBox:SetPoint("BOTTOMRIGHT", -26, 30)
+    local infoBar = CreateFrame("EventFrame", nil, f, "MinimalScrollBar")
+    infoBar:SetPoint("TOPLEFT", infoBox, "TOPRIGHT", 6, 0)
+    infoBar:SetPoint("BOTTOMLEFT", infoBox, "BOTTOMRIGHT", 6, 0)
+    local infoView = CreateScrollBoxListLinearView()
+    infoView:SetElementExtentCalculator(function(_, data) return INFO_ROWS[data.kind] end)
+    infoView:SetElementInitializer("Frame", InitInfo)
+    ScrollUtil.InitScrollBoxListWithScrollBar(infoBox, infoBar, infoView)
+    self.infoBox = infoBox
+    self.characterParts = { infoBox, infoBar }
+
+    local view = AltInventoryDB.windowView
+    self.view = (view == "played" or view == "characters") and view or "search"
     self:ShowView()
 end
 
 function Window:ShowView()
     for _, part in ipairs(self.searchParts) do part:SetShown(self.view == "search") end
     for _, part in ipairs(self.playedParts) do part:SetShown(self.view == "played") end
+    for _, part in ipairs(self.characterParts) do part:SetShown(self.view == "characters") end
     for key, tab in pairs(self.tabs) do tab:SetActive(key == self.view) end
 end
 
@@ -374,7 +437,7 @@ function Window:SetView(view)
         -- This character's time, if login couldn't ask for it quietly.
         local data = AltInventoryDB.chars[ns.GetCharKey()]
         if data and not data.played then ns.Played:Request(false) end
-    else
+    elseif view == "search" then
         self.box:SetFocus()
     end
     self:Refresh()
@@ -398,6 +461,22 @@ function Window:RefreshPlayed()
     self.status:SetText(text)
 end
 
+function Window:RefreshCharacters()
+    local elements = {}
+    local blocks = ns.Characters.Blocks()
+    for _, block in ipairs(blocks) do
+        elements[#elements + 1] = { kind = "character", block = block }
+        for _, section in ipairs(block.sections) do
+            elements[#elements + 1] = { kind = "section", title = section.title }
+            for _, line in ipairs(section.lines) do
+                elements[#elements + 1] = { kind = "line", line = line, icon = line.icon }
+            end
+        end
+    end
+    self.infoBox:SetDataProvider(CreateDataProvider(elements), ScrollBoxConstants.RetainScrollPosition)
+    self.status:SetText("As of each character's last login. Concentration and cooldowns show after opening each profession once.")
+end
+
 -- Refreshing ------------------------------------------------------------
 
 function Window:QueueRefresh()
@@ -412,6 +491,7 @@ end
 function Window:Refresh()
     if not self.frame or not self.frame:IsShown() then return end
     if self.view == "played" then return self:RefreshPlayed() end
+    if self.view == "characters" then return self:RefreshCharacters() end
     local text = self.box:GetText()
     local results, found = ns.Search.Find(text, filters)
     local elements = {}

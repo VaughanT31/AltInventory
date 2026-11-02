@@ -2,7 +2,7 @@
 ## Title: Alt Inventory
 ## Author: CtrlShift_Zed
 ## Notes: Shows per-alt item counts (Bags, Bank, Mail, Warband Bank) in item tooltips, and searches every character's items by name. Retail, WoW Forever and Classic.
-## Version: 1.7.1
+## Version: 1.8.0
 ## Category: CtrlShift_Zed
 ## IconTexture: Interface\AddOns\AltInventory\icon
 ## SavedVariables: AltInventoryDB
@@ -14,6 +14,8 @@ Core.lua
 Tooltip.lua
 Search.lua
 Played.lua
+Characters.lua
 UI\SearchWindow.lua
+UI\ReagentFinder.lua
 UI\MinimapButton.lua
 AltInventory.lua
