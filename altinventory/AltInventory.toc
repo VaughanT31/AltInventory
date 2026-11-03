@@ -16,6 +16,7 @@ Search.lua
 Played.lua
 Characters.lua
 UI\SearchWindow.lua
+UI\SidePanels.lua
 UI\ReagentFinder.lua
 UI\MinimapButton.lua
 AltInventory.lua

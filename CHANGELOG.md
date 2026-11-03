@@ -4,6 +4,8 @@
 
 - **Characters tab, only who's been on:** characters you haven't logged into since the tab came in no longer show as empty entries. They join the list after their next login, and the bottom line says how many are waiting.
 - **Fold characters away:** click a character's name to fold them down to one line, and again to open them. Shift-click folds or opens every character at once. Alt Inventory remembers which ones you folded.
+- **Reagent finder stacks with the other side panels:** it no longer covers Patron Planner's order queue or Auction Coach's Cheapest materials. They stack beside the profession window, the order queue on top, and a panel that doesn't fit starts a new column.
+- **A button beside the profession window's tabs** turns the reagent finder (Other characters) on and off, the same as `/altinv reagents`. A gold line means it's on.
 
 ## 1.8.0
 

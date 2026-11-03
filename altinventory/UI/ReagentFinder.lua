@@ -1,8 +1,9 @@
 -- Alt Inventory - a small panel beside the profession window: which of your
 -- other characters hold the materials for the recipe or crafting order on
--- screen. Only shows when somebody else has something. /altinv reagents
--- turns it off and on. Retail and Forever only: the Classic clients have no
--- such window.
+-- screen. Only shows when somebody else has something. /altinv reagents or
+-- its button beside the window's tabs turns it off and on, and it stacks
+-- with the other CtrlShiftZed side panels (UI/SidePanels.lua). Retail and
+-- Forever only: the Classic clients have no such window.
 
 local _, ns = ...
 
@@ -70,6 +71,13 @@ function Finder:Build()
     f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     f.title:SetPoint("TOPLEFT", 8, -7)
     f.title:SetText("On your other characters")
+    -- Placed with the other side panels (UI/SidePanels.lua), below the rest.
+    ns.SidePanels:Register("altinventory.reagents", {
+        frame = f, label = "Other characters", order = 30, pages = { orders = true, recipes = true },
+        tip = "Which of your other characters and your Warband Bank hold this recipe's materials. Shows when someone else has something.",
+        isOn = IsOn,
+        toggle = function() Finder:Toggle() end,
+    })
 end
 
 function Finder:Show(recipeID, order)

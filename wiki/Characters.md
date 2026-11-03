@@ -21,7 +21,7 @@ Click a character's name to fold them down to one line, and click again to open 
 
 ### Reagent finder
 
-With a profession window open, a small panel beside it lists which other characters and your Warband Bank hold the materials for the recipe or crafting order on screen. It leaves out what a customer brings, and only shows when someone else has something. `/altinv reagents` turns it off and on. Retail and WoW Forever only.
+With a profession window open, a small panel beside it lists which other characters and your Warband Bank hold the materials for the recipe or crafting order on screen. It leaves out what a customer brings, and only shows when someone else has something. `/altinv reagents` or the **Other characters** button beside the window's tabs turns it off and on. It stacks with the other CtrlShiftZed side panels (Patron Planner's order queue, Auction Coach's Cheapest materials, Alt Inventory's Other characters) instead of covering them, the order queue on top. A button for each sits beside the window's tabs: a gold line means it's on. Retail and WoW Forever only.
 
 ---
 
