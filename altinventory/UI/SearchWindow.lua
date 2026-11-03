@@ -184,17 +184,39 @@ local function InitInfo(row, data)
         row.icon:SetSize(14, 14)
         row.icon:SetPoint("LEFT", 22, 0)
         row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        -- Character rows: a plus or minus to fold the character away.
+        row.fold = row:CreateTexture(nil, "ARTWORK")
+        row.fold:SetSize(14, 14)
+        row.fold:SetPoint("TOPLEFT", 6, -4)
+        row.hover = row:CreateTexture(nil, "HIGHLIGHT")
+        row.hover:SetAllPoints()
+        row.hover:SetColorTexture(1, 1, 1, 0.06)
     end
     row.text:ClearAllPoints()
     row.icon:SetShown(data.icon ~= nil)
     row.icon:SetTexture(data.icon or 134400)
     row.sub:SetText("")
     row.right:SetText("")
-    if data.kind == "character" then
+    local isCharacter = data.kind == "character"
+    row.fold:SetShown(isCharacter)
+    row:EnableMouse(isCharacter)
+    row:SetScript("OnMouseUp", isCharacter and function(_, button)
+        if button == "LeftButton" then Window:ToggleCharacter(data.block.key, IsShiftKeyDown()) end
+    end or nil)
+    row:SetScript("OnEnter", isCharacter and function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:AddLine(data.collapsed and "Click to show this character" or "Click to fold this character away", 1, 1, 1)
+        GameTooltip:AddLine("Shift-click to do it for every character", 0.8, 0.8, 0.8)
+        GameTooltip:Show()
+    end or nil)
+    row:SetScript("OnLeave", isCharacter and function() GameTooltip:Hide() end or nil)
+    if isCharacter then
+        row.fold:SetTexture(data.collapsed and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up")
         row.text:SetFontObject("GameFontHighlight")
-        row.text:SetPoint("TOPLEFT", 6, -3)
+        row.text:SetPoint("TOPLEFT", 24, -3)
         row.text:SetPoint("RIGHT", -6, 0)
         row.text:SetText(data.block.name .. " |cff999999" .. (data.block.key:match("%-(.+)$") or "") .. "|r")
+        row.sub:SetPoint("BOTTOMLEFT", 24, 3)
         row.sub:SetText("|cffcccccc" .. data.block.summary .. "|r")
     elseif data.kind == "section" then
         row.text:SetFontObject("GameFontNormalSmall")
@@ -463,18 +485,40 @@ end
 
 function Window:RefreshCharacters()
     local elements = {}
-    local blocks = ns.Characters.Blocks()
+    local blocks, waiting = ns.Characters.Blocks()
+    local collapsed = AltInventoryDB.collapsed
     for _, block in ipairs(blocks) do
-        elements[#elements + 1] = { kind = "character", block = block }
-        for _, section in ipairs(block.sections) do
-            elements[#elements + 1] = { kind = "section", title = section.title }
-            for _, line in ipairs(section.lines) do
-                elements[#elements + 1] = { kind = "line", line = line, icon = line.icon }
+        local folded = collapsed[block.key] == true
+        elements[#elements + 1] = { kind = "character", block = block, collapsed = folded }
+        if not folded then
+            for _, section in ipairs(block.sections) do
+                elements[#elements + 1] = { kind = "section", title = section.title }
+                for _, line in ipairs(section.lines) do
+                    elements[#elements + 1] = { kind = "line", line = line, icon = line.icon }
+                end
             end
         end
     end
     self.infoBox:SetDataProvider(CreateDataProvider(elements), ScrollBoxConstants.RetainScrollPosition)
-    self.status:SetText("As of each character's last login. Concentration and cooldowns show after opening each profession once.")
+    local text = "As of each character's last login. Concentration and cooldowns show after opening each profession once."
+    if waiting > 0 then
+        text = ("%d more character%s will show here after logging in. Click a name to fold it away."):format(waiting,
+            waiting == 1 and "" or "s")
+    end
+    self.status:SetText(text)
+end
+
+-- Folds a character away on the Characters tab, or opens it again. With
+-- all, every character follows the one clicked.
+function Window:ToggleCharacter(key, all)
+    local collapsed = AltInventoryDB.collapsed
+    local fold = not collapsed[key]
+    if all then
+        for _, block in ipairs((ns.Characters.Blocks())) do collapsed[block.key] = fold or nil end
+    else
+        collapsed[key] = fold or nil
+    end
+    self:RefreshCharacters()
 end
 
 -- Refreshing ------------------------------------------------------------

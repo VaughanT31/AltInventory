@@ -249,11 +249,24 @@ function Characters.Block(key, data, now)
     return block
 end
 
--- Every character, your current one first, then by name.
+-- Has this character been on since the Characters tab came in (1.8.0)? Bag
+-- space is read on every login, so a character without it has nothing to show.
+function Characters.HasInfo(data)
+    return data.bagTotal ~= nil or data.ilvl ~= nil
+end
+
+-- Every character logged into since then, your current one first, then by
+-- name. The second result is how many are left out until they log in.
 function Characters.Blocks(now)
     local me = ns.GetCharKey()
-    local keys = {}
-    for key in pairs(AltInventoryDB.chars) do keys[#keys + 1] = key end
+    local keys, waiting = {}, 0
+    for key, data in pairs(AltInventoryDB.chars) do
+        if key == me or Characters.HasInfo(data) then
+            keys[#keys + 1] = key
+        else
+            waiting = waiting + 1
+        end
+    end
     table.sort(keys, function(a, b)
         if (a == me) ~= (b == me) then return a == me end
         return a < b
@@ -262,7 +275,7 @@ function Characters.Blocks(now)
     for _, key in ipairs(keys) do
         blocks[#blocks + 1] = Characters.Block(key, AltInventoryDB.chars[key], now)
     end
-    return blocks
+    return blocks, waiting
 end
 
 -- Who else holds an item, for the reagent finder: { { name, count, text }, ... }

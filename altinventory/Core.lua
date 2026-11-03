@@ -142,6 +142,8 @@ function ns.InitDB()
     AltInventoryDB.warband = AltInventoryDB.warband or {}
     AltInventoryDB.names = AltInventoryDB.names or {}
     AltInventoryDB.currencyNames = AltInventoryDB.currencyNames or {}
+    -- Characters folded away on the Characters tab: ["Name-Realm"] = true.
+    AltInventoryDB.collapsed = AltInventoryDB.collapsed or {}
 end
 
 function ns.ScanBags()

@@ -86,6 +86,7 @@ local function RemoveCharacter(input)
         return
     end
     AltInventoryDB.chars[key] = nil
+    AltInventoryDB.collapsed[key] = nil
     Print("Removed " .. key .. ".")
 end
 

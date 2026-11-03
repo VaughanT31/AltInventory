@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.0
+
+- **Characters tab, only who's been on:** characters you haven't logged into since the tab came in no longer show as empty entries. They join the list after their next login, and the bottom line says how many are waiting.
+- **Fold characters away:** click a character's name to fold them down to one line, and again to open them. Shift-click folds or opens every character at once. Alt Inventory remembers which ones you folded.
+
 ## 1.8.0
 
 - **A new Characters tab:** every character at a glance: item level, free bag and reagent bag slots, concentration, Moxie, profession cooldowns and this patch's currencies. Open it from the window or with `/altinv characters`. Everything is as of the last time each character was on.

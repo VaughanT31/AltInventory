@@ -15,6 +15,10 @@ Each character shows:
 
 It's all as of the last time each character was on. Concentration and cooldowns show once you've opened that profession on that character.
 
+Only characters you've logged into since the tab came in (1.8.0) are listed; the rest join the list after their next login, and the bottom line says how many are waiting.
+
+Click a character's name to fold them down to one line, and click again to open them. **Shift-click** folds or opens every character at once. Alt Inventory remembers which ones you folded.
+
 ### Reagent finder
 
 With a profession window open, a small panel beside it lists which other characters and your Warband Bank hold the materials for the recipe or crafting order on screen. It leaves out what a customer brings, and only shows when someone else has something. `/altinv reagents` turns it off and on. Retail and WoW Forever only.
