@@ -7,7 +7,7 @@
 | `/altinv` | Rescan now, and list every character with their gold and when their bank and mailbox were last opened |
 | `/altinv search` | Open the window (Search and Play time) |
 | `/altinv find potion` | Open the window searching for "potion" |
-| `/altinv remove Name` | Forget a deleted or transferred character (`Name-Realm` works too) |
+| `/altinv remove Name` | Forget a deleted, renamed or transferred character (`Name-Realm` works too) |
 | `/altinv minimap` | Show or hide the minimap button |
 
 ---

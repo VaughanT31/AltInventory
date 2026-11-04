@@ -22,7 +22,7 @@ local bankOpen = false
 --   /altinv              rescan now and list tracked characters
 --   /altinv search       open the search window
 --   /altinv find Text    open the search window searching for Text
---   /altinv remove Name  forget a character (Name or Name-Realm)
+--   /altinv remove Name  forget a character (Name or Name-Realm), e.g. an old name after a rename
 --   /altinv minimap      show or hide the minimap button
 -- ---------------------------------------------------------------------
 

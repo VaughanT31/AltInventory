@@ -54,7 +54,7 @@ Bank, Mail and Warband Bank counts more than a day old show their age in the too
 
 - `/altinv`, rescan now and list every tracked character with their gold and when their bank and mailbox were last opened.
 - `/altinv search`, open the search window. `/altinv find potion` opens it searching for "potion".
-- `/altinv remove Name` (or `Name-Realm`), forget a deleted or transferred character.
+- `/altinv remove Name` (or `Name-Realm`), forget a deleted, renamed or transferred character.
 - `/altinv minimap`, show or hide the minimap button.
 
 ## Installation

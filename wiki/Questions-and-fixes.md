@@ -14,6 +14,10 @@ Open the bank (and the Warband Bank) once on that character. Counts more than a 
 
 Open the mailbox once on that character. Mail is read when the mailbox is open.
 
+**I renamed a character and now it shows twice.**
+
+From 1.10.1 Alt Inventory spots a rename when you log in on that character and drops the old name. If the old name was saved before 1.10.1, type `/altinv remove OldName` once.
+
 **How do I remove a character I deleted?**
 
 Type `/altinv remove Name`, or `/altinv remove Name-Realm` if you have the same name on two realms.

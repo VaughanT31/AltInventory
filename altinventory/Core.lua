@@ -121,11 +121,30 @@ function ns.GetCharKey()
     return charKey
 end
 
+-- A renamed character keeps its GUID, so an older entry with the same GUID
+-- under another name is this character before the rename: drop it, keeping
+-- whether it was folded on the Characters tab. Checked once per session.
+local renameChecked = false
+local function DropOldNames(key, guid)
+    if renameChecked or not guid then return end
+    renameChecked = true
+    for other, data in pairs(AltInventoryDB.chars) do
+        if other ~= key and data.guid == guid then
+            AltInventoryDB.chars[other] = nil
+            if AltInventoryDB.collapsed[other] then AltInventoryDB.collapsed[key] = true end
+            AltInventoryDB.collapsed[other] = nil
+        end
+    end
+end
+
 local function GetCharData()
     local key = ns.GetCharKey()
+    local guid = UnitGUID("player")
+    DropOldNames(key, guid)
     local data = AltInventoryDB.chars[key]
+    if data then data.guid = guid or data.guid end
     if not data then
-        data = { class = select(2, UnitClass("player")), bags = {}, bank = {}, mail = {} }
+        data = { class = select(2, UnitClass("player")), guid = guid, bags = {}, bank = {}, mail = {} }
         AltInventoryDB.chars[key] = data
     else
         data.class = select(2, UnitClass("player"))

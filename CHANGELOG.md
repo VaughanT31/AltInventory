@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.1
+
+- **Renamed characters no longer show twice:** Alt Inventory now spots a rename when you log in on that character and drops the old name. For a character renamed before this version, type `/altinv remove OldName` once.
+
 ## 1.10.0
 
 - **Reagent finder stacks with the other side panels:** it no longer covers Patron Planner's order queue or Auction Coach's Cheapest materials. They stack beside the profession window, the order queue on top, and a panel that doesn't fit starts a new column.
