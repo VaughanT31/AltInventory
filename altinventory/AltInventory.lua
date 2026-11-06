@@ -24,6 +24,7 @@ local bankOpen = false
 --   /altinv find Text    open the search window searching for Text
 --   /altinv remove Name  forget a character (Name or Name-Realm), e.g. an old name after a rename
 --   /altinv minimap      show or hide the minimap button
+--   /altinv lumber       open the Lumber tab (Retail)
 -- ---------------------------------------------------------------------
 
 local PREFIX = "|cffffd100Alt Inventory:|r "
@@ -101,6 +102,9 @@ SlashCmdList.ALTINVENTORY = function(msg)
     elseif cmd == "characters" or cmd == "chars" then
         ns.SearchWindow:Open()
         ns.SearchWindow:SetView("characters")
+    elseif cmd == "lumber" and WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+        ns.SearchWindow:Open()
+        ns.SearchWindow:SetView("lumber")
     elseif cmd == "reagents" then
         Print(ns.ReagentFinder:Toggle() and "Reagent finder on, beside the profession window." or "Reagent finder off.")
     elseif cmd == "minimap" then
@@ -124,6 +128,9 @@ SlashCmdList.ALTINVENTORY = function(msg)
         Print("/altinv find Name - search for an item")
         Print("/altinv remove Name - forget a character")
         Print("/altinv characters - bag space, item level, concentration, Moxie, cooldowns and currencies")
+        if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+            Print("/altinv lumber - lumber and Essence of Lumber on every character")
+        end
         Print("/altinv reagents - turn the reagent finder off or on")
         Print("/altinv minimap - show or hide the minimap button")
     end

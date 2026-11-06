@@ -32,6 +32,8 @@ The window's *Play time* tab shows how long you've played on each character, and
 
 The *Characters* tab (`/altinv characters`) shows each character's item level, free bag slots, concentration, Moxie, profession cooldowns and this patch's currencies. Beside the profession window, the reagent finder lists who else holds the materials for the recipe or order on screen (`/altinv reagents` turns it off and on).
 
+On Retail, the *Lumber* tab (`/altinv lumber`) lists every lumber type and your Essence of Lumber with how much each character and the warband bank holds, so you can see who has Essence to trade at the neighborhood lumberjack (one Essence for 20 lumber of any type).
+
 ## Search
 
 Click the magnifier in your bags' search box or the Alt Inventory button on the minimap (also in the minimap's addon list), or type `/altinv search`, and type part of an item's name. Every match across all your characters is listed with a count per character and place. Filter by character or by place (bags, bank, mail, warband), sort by name or total, and shift-click to link an item in chat. A number searches by item ID, and you can drop an item on the search box.
@@ -56,6 +58,7 @@ Bank, Mail and Warband Bank counts more than a day old show their age in the too
 - `/altinv search`, open the search window. `/altinv find potion` opens it searching for "potion".
 - `/altinv remove Name` (or `Name-Realm`), forget a deleted, renamed or transferred character.
 - `/altinv minimap`, show or hide the minimap button.
+- `/altinv lumber`, open the Lumber tab (Retail): every lumber type and Essence of Lumber on every character.
 
 ## Installation
 

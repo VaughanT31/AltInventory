@@ -293,7 +293,10 @@ function Window:Build()
     title:SetText("Alt Inventory")
     self.tabs = {}
     local previous
-    for _, t in ipairs({ { "search", "Search" }, { "characters", "Characters" }, { "played", "Play time" } }) do
+    local tabs = { { "search", "Search" }, { "characters", "Characters" }, { "played", "Play time" } }
+    -- Lumber (player housing) is Retail only.
+    if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then tabs[#tabs + 1] = { "lumber", "Lumber" } end
+    for _, t in ipairs(tabs) do
         local tab = Tab(f, t[2])
         if previous then tab:SetPoint("LEFT", previous, "RIGHT", 2, 0) else tab:SetPoint("LEFT", title, "RIGHT", 10, -1) end
         tab:SetScript("OnClick", function() Window:SetView(t[1]) end)
@@ -439,12 +442,14 @@ function Window:Build()
     self.characterParts = { infoBox, infoBar }
 
     local view = AltInventoryDB.windowView
-    self.view = (view == "played" or view == "characters") and view or "search"
+    self.view = (view == "played" or view == "characters" or (view == "lumber" and self.tabs.lumber)) and view or "search"
     self:ShowView()
 end
 
 function Window:ShowView()
-    for _, part in ipairs(self.searchParts) do part:SetShown(self.view == "search") end
+    -- Lumber uses the search list with a fixed set of items, so no search box.
+    local list = self.view == "search" or self.view == "lumber"
+    for _, part in ipairs(self.searchParts) do part:SetShown(list and (part ~= self.box or self.view == "search")) end
     for _, part in ipairs(self.playedParts) do part:SetShown(self.view == "played") end
     for _, part in ipairs(self.characterParts) do part:SetShown(self.view == "characters") end
     for key, tab in pairs(self.tabs) do tab:SetActive(key == self.view) end
@@ -508,6 +513,35 @@ function Window:RefreshCharacters()
     self.status:SetText(text)
 end
 
+-- Every lumber type and Essence of Lumber, with who holds them, in the
+-- search list. The character, place and sort filters still apply.
+function Window:RefreshLumber()
+    local ids = { [ns.Search.ESSENCE_ID] = true }
+    for _, itemID in ipairs(ns.Search.LUMBER_IDS) do ids[itemID] = true end
+    local results, found = ns.Search.Find({ ids = ids }, filters)
+    local elements = {}
+    local essence = 0
+    for _, result in ipairs(results) do
+        if result.itemID == ns.Search.ESSENCE_ID then essence = result.total end
+        elements[#elements + 1] = { kind = "item", itemID = result.itemID, result = result }
+        for _, holder in ipairs(result.holders) do
+            elements[#elements + 1] = { kind = "holder", itemID = result.itemID, holder = holder }
+        end
+        if result.warband > 0 then
+            elements[#elements + 1] = { kind = "warband", itemID = result.itemID, count = result.warband }
+        end
+    end
+    self.scrollBox:SetDataProvider(CreateDataProvider(elements), ScrollBoxConstants.RetainScrollPosition)
+    self.empty:SetText(found == 0 and "No lumber yet.\n\nLumber shows here once a character holding it logs in, or the warband bank is opened." or "")
+    local Number = BreakUpLargeNumbers or tostring
+    local text = ("%d kind%s of lumber across your characters and the warband bank."):format(found, found == 1 and "" or "s")
+    if essence > 0 then
+        text = text .. (" Your %s Essence of Lumber trade%s for %s more at your neighborhood lumberjack."):format(
+            Number(essence), essence == 1 and "s" or "", Number(essence * 20))
+    end
+    self.status:SetText(text)
+end
+
 -- Folds a character away on the Characters tab, or opens it again. With
 -- all, every character follows the one clicked.
 function Window:ToggleCharacter(key, all)
@@ -536,6 +570,7 @@ function Window:Refresh()
     if not self.frame or not self.frame:IsShown() then return end
     if self.view == "played" then return self:RefreshPlayed() end
     if self.view == "characters" then return self:RefreshCharacters() end
+    if self.view == "lumber" then return self:RefreshLumber() end
     local text = self.box:GetText()
     local results, found = ns.Search.Find(text, filters)
     local elements = {}

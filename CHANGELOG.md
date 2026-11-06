@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.11.0
+
+- **New Lumber tab (Retail):** every type of lumber and your Essence of Lumber in one list, with how much each character and the warband bank holds. Handy for finding which characters have Essence to trade at the neighborhood lumberjack: each one trades for 20 lumber of any type, and the line at the bottom says how much lumber yours is worth. The character, place and sort filters work here too. `/altinv lumber` opens it.
+
 ## 1.10.2
 
 - **Update checks in addon managers:** the addon now carries its CurseForge project ID, so addon managers that read it can match it to CurseForge and tell you when an update is out.

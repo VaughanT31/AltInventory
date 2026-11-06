@@ -9,6 +9,7 @@
 | `/altinv find potion` | Open the window searching for "potion" |
 | `/altinv remove Name` | Forget a deleted, renamed or transferred character (`Name-Realm` works too) |
 | `/altinv minimap` | Show or hide the minimap button |
+| `/altinv lumber` | Open the Lumber tab (Retail) |
 
 ---
 

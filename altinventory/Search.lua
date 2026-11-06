@@ -18,8 +18,17 @@ ns.Search = Search
 
 local MAX_RESULTS = 200
 
+-- Retail's lumber (one type per expansion, oldest first) and Essence of
+-- Lumber, for the Lumber tab. All Warbound: they move freely between alts.
+Search.LUMBER_IDS = {
+    245586, 242691, 251762, 251764, 251763, 251766, 251767, 251768, 251772, 251773, 248012, 256963,
+}
+Search.ESSENCE_ID = 269010
+
 -- What was typed, as { id = itemID } or { text = lowercased plain text }.
 local function ParseQuery(text)
+    -- A fixed set of item IDs ({ ids = { [itemID] = true } }), for the Lumber tab.
+    if type(text) == "table" then return text end
     text = strtrim and strtrim(text or "") or (text or ""):match("^%s*(.-)%s*$")
     if text == "" then return nil end
     local linked = text:match("|Hitem:(%d+)")
@@ -31,6 +40,7 @@ end
 Search.ParseQuery = ParseQuery
 
 local function Matches(query, itemID, entry)
+    if query.ids then return itemID ~= nil and query.ids[itemID] == true end
     if query.id then return itemID == query.id end
     return entry ~= nil and entry.n:lower():find(query.text, 1, true) ~= nil
 end
