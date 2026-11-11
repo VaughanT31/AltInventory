@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.12.0
 
 - **Other characters panel no longer covers the profession tabs (WoW Forever):** the side panels now start past the tabs on the right edge of the profession window. You can also move them: Shift-drag a panel by its title to move the whole column, and Shift-right-click one to put it back. The spot is remembered.
 
