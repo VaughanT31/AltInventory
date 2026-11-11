@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Other characters panel no longer covers the profession tabs (WoW Forever):** the side panels now start past the tabs on the right edge of the profession window. You can also move them: Shift-drag a panel by its title to move the whole column, and Shift-right-click one to put it back. The spot is remembered.
+
 ## 1.11.0
 
 - **New Lumber tab (Retail):** every type of lumber and your Essence of Lumber in one list, with how much each character and the warband bank holds. Handy for finding which characters have Essence to trade at the neighborhood lumberjack: each one trades for 20 lumber of any type, and the line at the bottom says how much lumber yours is worth. The character, place and sort filters work here too. `/altinv lumber` opens it.

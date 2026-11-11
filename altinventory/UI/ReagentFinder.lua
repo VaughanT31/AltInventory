@@ -77,6 +77,7 @@ function Finder:Build()
         tip = "Which of your other characters and your Warband Bank hold this recipe's materials. Shows when someone else has something.",
         isOn = IsOn,
         toggle = function() Finder:Toggle() end,
+        store = function() return AltInventoryDB end,
     })
 end
 
