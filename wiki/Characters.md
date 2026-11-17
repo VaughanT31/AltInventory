@@ -27,7 +27,7 @@ Each Essence trades for 20 lumber of any type at your neighborhood lumberjack (L
 
 ### Reagent finder
 
-With a profession window open, a small panel beside it lists which other characters and your Warband Bank hold the materials for the recipe or crafting order on screen. It leaves out what a customer brings, and only shows when someone else has something. `/altinv reagents` or the **Other characters** button beside the window's tabs turns it off and on. It stacks with the other CtrlShiftZed side panels (Patron Planner's order queue, Auction Coach's Cheapest materials, Alt Inventory's Other characters) instead of covering them, the order queue on top. A button for each sits beside the window's tabs: a gold line means it's on. Retail and WoW Forever only.
+With a profession window open, a small panel beside it lists which other characters and your Warband Bank hold the materials for the recipe or crafting order on screen. It leaves out what a customer brings, and only shows when someone else has something. `/altinv reagents` or the **Other characters** button beside the window's tabs turns it off and on. It stacks with the other CtrlShiftZed side panels (Patron Planner's order queue, Auction Coach's Cheapest materials, Alt Inventory's Other characters) instead of covering them, the order queue on top. A button for each sits beside the window's tabs: a gold line means it's on. Shift-drag a panel by its title to move the whole column, and Shift-right-click it to put it back; the spot is remembered. On WoW Forever the panels start past the profession tabs on the window's right edge. Retail and WoW Forever only.
 
 ---
 

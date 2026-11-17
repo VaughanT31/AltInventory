@@ -30,7 +30,7 @@ It also keeps each character's gold (hover the minimap button for every characte
 
 The window's *Play time* tab shows how long you've played on each character, and added up by class, role (from each character's current spec) or faction. A character's time is read when you log into it.
 
-The *Characters* tab (`/altinv characters`) shows each character's item level, free bag slots, concentration, Moxie, profession cooldowns and this patch's currencies. Beside the profession window, the reagent finder lists who else holds the materials for the recipe or order on screen (`/altinv reagents` turns it off and on).
+The *Characters* tab (`/altinv characters`) shows each character's item level, free bag slots, concentration, Moxie, profession cooldowns and this patch's currencies. Beside the profession window, the reagent finder lists who else holds the materials for the recipe or order on screen (`/altinv reagents` turns it off and on). Shift-drag a panel by its title to move the whole column, and Shift-right-click it to put it back; the spot is remembered.
 
 On Retail, the *Lumber* tab (`/altinv lumber`) lists every lumber type and your Essence of Lumber with how much each character and the warband bank holds, so you can see who has Essence to trade at the neighborhood lumberjack (one Essence for 20 lumber of any type).
 
