@@ -16,6 +16,10 @@ The places are **Bags**, **Bank** (the character's own bank), **Mail** (items at
 
 Bank, mail and Warband Bank counts only update when you open them. When a count is more than a day old, the tooltip shows its age, for example `Bank: 20 (12d ago)`. Open that bank or mailbox on that character and the count is fresh again.
 
+### Mail about to expire
+
+Mail with items or gold that expires within 3 days gets a warning in chat when you log in, on any character, so nothing gets returned or deleted while you're on another alt. The tooltip shows it too, for example `Mail: 3 (expires in 1d 4h)`. The times are as of the last time that character opened its mailbox. `/altinv mail` lists it any time, and `/altinv mailwarn` turns the login warning off or on.
+
 ### A character is missing
 
 They haven't logged in with Alt Inventory installed yet, or don't hold the item. Log in on them once. If a character has been deleted or moved to another realm, remove it with `/altinv remove Name`.

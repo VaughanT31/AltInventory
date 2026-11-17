@@ -25,12 +25,40 @@ local bankOpen = false
 --   /altinv remove Name  forget a character (Name or Name-Realm), e.g. an old name after a rename
 --   /altinv minimap      show or hide the minimap button
 --   /altinv lumber       open the Lumber tab (Retail)
+--   /altinv mail         list mail expiring in the next 3 days
+--   /altinv mailwarn     turn the login warning about expiring mail off or on
 -- ---------------------------------------------------------------------
 
 local PREFIX = "|cffffd100Alt Inventory:|r "
 
 local function Print(msg)
     print(PREFIX .. msg)
+end
+
+-- Mail with items or gold expiring within 3 days, on any character, as of
+-- the last time each one opened its mailbox.
+local function ExpiringMailLines()
+    local lines = {}
+    for _, e in ipairs(ns.ExpiringMail()) do
+        local what = e.items > 0 and (e.items .. (e.items == 1 and " item" or " items")) or nil
+        if e.money > 0 and GetCoinTextureString then
+            what = (what and (what .. " and ") or "") .. GetCoinTextureString(e.money)
+        end
+        lines[#lines + 1] = ("  %s: %d mail%s%s, first in %s"):format(
+            ns.ClassName(e.key, AltInventoryDB.chars[e.key].class), e.count, e.count == 1 and "" or "s",
+            what and (" (" .. what .. ")") or "", ns.TimeLeftText(e.soonest))
+    end
+    return lines
+end
+
+local function WarnExpiringMail(always)
+    local lines = ExpiringMailLines()
+    if #lines == 0 then
+        if always then Print("No mail with items or gold expires in the next 3 days.") end
+        return
+    end
+    Print("Mail expiring soon. Log in and open the mailbox to keep it:")
+    for _, line in ipairs(lines) do print(line) end
 end
 
 local function ListCharacters()
@@ -105,6 +133,12 @@ SlashCmdList.ALTINVENTORY = function(msg)
     elseif cmd == "lumber" and WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
         ns.SearchWindow:Open()
         ns.SearchWindow:SetView("lumber")
+    elseif cmd == "mail" then
+        WarnExpiringMail(true)
+    elseif cmd == "mailwarn" then
+        AltInventoryDB.mailWarnOff = not AltInventoryDB.mailWarnOff or nil
+        Print(AltInventoryDB.mailWarnOff and "Expiring mail warning on login off. /altinv mail still lists it."
+            or "Expiring mail warning on login on.")
     elseif cmd == "reagents" then
         Print(ns.ReagentFinder:Toggle() and "Reagent finder on, beside the profession window." or "Reagent finder off.")
     elseif cmd == "minimap" then
@@ -131,6 +165,8 @@ SlashCmdList.ALTINVENTORY = function(msg)
         if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
             Print("/altinv lumber - lumber and Essence of Lumber on every character")
         end
+        Print("/altinv mail - mail with items or gold expiring in the next 3 days")
+        Print("/altinv mailwarn - turn the expiring mail warning on login off or on")
         Print("/altinv reagents - turn the reagent finder off or on")
         Print("/altinv minimap - show or hide the minimap button")
     end
@@ -206,6 +242,8 @@ frame:SetScript("OnEvent", function(_, event, ...)
         ns.Played:Note()
         -- After other addons' login requests, so the answer is ours.
         C_Timer.After(6, function() ns.Played:Request(true) end)
+        -- Once login chat has settled.
+        if not AltInventoryDB.mailWarnOff then C_Timer.After(8, function() WarnExpiringMail(false) end) end
     elseif event == "PLAYER_ENTERING_WORLD" then
         ns.ScanBags()
     elseif event == "PLAYER_EQUIPMENT_CHANGED" then

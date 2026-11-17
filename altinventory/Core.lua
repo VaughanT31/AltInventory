@@ -7,6 +7,9 @@
 --     chars = { ["Name-Realm"] = { class, bags = { [itemID] = count },
 --                                  bank = {...}, bankScannedAt,
 --                                  mail = {...}, mailScannedAt,
+--                                  mailExpiry = { { at, items, money } }  mail holding
+--                                    items or gold, when each one expires,
+--                                  mailItemExpiry = { [itemID] = soonest expiry },
 --                                  money (copper),
 --                                  currencies = { [currencyID] = amount },
 --                                  and what Characters.lua keeps } },
@@ -199,18 +202,68 @@ function ns.ScanMail()
     if not GetInboxNumItems or not GetInboxItem then return end
     local data = GetCharData()
     wipe(data.mail)
+    local expiry, itemExpiry = {}, {}
+    local now = time()
     local attachments = ATTACHMENTS_MAX_RECEIVE or 16
     for i = 1, GetInboxNumItems() do
+        -- daysLeft is a fraction of a day: when the mail is returned or deleted.
+        local daysLeft, money = nil, 0
+        if GetInboxHeaderInfo then
+            local _, _, _, _, gold, _, days = GetInboxHeaderInfo(i)
+            money, daysLeft = tonumber(gold) or 0, tonumber(days)
+        end
+        local at = daysLeft and (now + math.floor(daysLeft * 86400)) or nil
+        local items = 0
         for a = 1, attachments do
             local _, itemID, icon, count, quality = GetInboxItem(i, a)
             if itemID then
+                items = items + 1
                 data.mail[itemID] = (data.mail[itemID] or 0) + (count or 1)
                 local link = GetInboxItemLink and GetInboxItemLink(i, a)
                 NoteName(itemID, link, quality, icon)
+                if at and (not itemExpiry[itemID] or at < itemExpiry[itemID]) then itemExpiry[itemID] = at end
             end
         end
+        if at and (items > 0 or money > 0) then
+            expiry[#expiry + 1] = { at = at, items = items, money = money }
+        end
     end
-    data.mailScannedAt = time()
+    data.mailExpiry = expiry
+    data.mailItemExpiry = itemExpiry
+    data.mailScannedAt = now
+end
+
+-- Mail that expires within `within` seconds, per character, soonest first:
+-- { { key, count, soonest, items, money }, ... }. Mail already past its
+-- time is left out (the game has returned or deleted it by then).
+ns.MAIL_WARN_SECONDS = 3 * 86400
+function ns.ExpiringMail(within)
+    within = within or ns.MAIL_WARN_SECONDS
+    local now, list = time(), {}
+    for key, data in pairs(AltInventoryDB.chars) do
+        local entry
+        for _, mail in ipairs(data.mailExpiry or {}) do
+            if mail.at > now and mail.at - now <= within then
+                entry = entry or { key = key, count = 0, items = 0, money = 0 }
+                entry.count = entry.count + 1
+                entry.items = entry.items + (mail.items or 0)
+                entry.money = entry.money + (mail.money or 0)
+                if not entry.soonest or mail.at < entry.soonest then entry.soonest = mail.at end
+            end
+        end
+        if entry then list[#list + 1] = entry end
+    end
+    table.sort(list, function(a, b) return a.soonest < b.soonest end)
+    return list
+end
+
+-- "2d 4h", "5h" or "40m" until a time.
+function ns.TimeLeftText(at)
+    local left = math.max(0, at - time())
+    local days, hours = math.floor(left / 86400), math.floor(left % 86400 / 3600)
+    if days > 0 then return days .. "d " .. hours .. "h" end
+    if hours > 0 then return hours .. "h" end
+    return math.max(1, math.floor(left / 60)) .. "m"
 end
 
 -- ---------------------------------------------------------------------
@@ -429,6 +482,11 @@ function ns.HoldingText(charData, itemID, places)
                 local label = place == "bags" and "Bags" or place == "bank" and "Bank" or "Mail"
                 local text = label .. ": " .. count
                 if place ~= "bags" then text = ns.WithAge(text, charData[place .. "ScannedAt"]) end
+                -- Mail about to expire: say when, in orange.
+                local at = place == "mail" and charData.mailItemExpiry and charData.mailItemExpiry[itemID]
+                if at and at > time() and at - time() <= ns.MAIL_WARN_SECONDS then
+                    text = text .. " |cffff9933(expires in " .. ns.TimeLeftText(at) .. ")|r"
+                end
                 parts[#parts + 1] = text
             end
         end

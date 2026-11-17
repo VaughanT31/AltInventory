@@ -10,6 +10,8 @@
 | `/altinv remove Name` | Forget a deleted, renamed or transferred character (`Name-Realm` works too) |
 | `/altinv minimap` | Show or hide the minimap button |
 | `/altinv lumber` | Open the Lumber tab (Retail) |
+| `/altinv mail` | List mail with items or gold expiring in the next 3 days |
+| `/altinv mailwarn` | Turn the expiring mail warning on login off or on |
 
 ---
 

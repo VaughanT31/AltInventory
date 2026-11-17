@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.13.0
+
+- **Expiring mail warning:** when you log in, Alt Inventory warns you about mail with items or gold that expires within 3 days, on any of your characters, so nothing gets returned or deleted while you're on another alt. Item tooltips and search show it too, for example "Mail: 3 (expires in 1d 4h)". `/altinv mail` lists it any time, and `/altinv mailwarn` turns the login warning off or on. Times are as of the last time each character opened its mailbox.
+
 ## 1.12.0
 
 - **Other characters panel no longer covers the profession tabs (WoW Forever):** the side panels now start past the tabs on the right edge of the profession window. You can also move them: Shift-drag a panel by its title to move the whole column, and Shift-right-click one to put it back. The spot is remembered.

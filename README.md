@@ -52,12 +52,15 @@ Data is written to a `SavedVariables` table (`AltInventoryDB`) on logout and loa
 
 Bank, Mail and Warband Bank counts more than a day old show their age in the tooltip, for example `Bank: 20 (12d ago)`, so you know when a count may be out of date.
 
+Mail with items or gold that expires within 3 days gets a warning when you log in, on any character, so nothing gets sent back or deleted. Tooltips show it too, for example `Mail: 3 (expires in 1d 4h)`.
+
 ## Commands
 
 - `/altinv`, rescan now and list every tracked character with their gold and when their bank and mailbox were last opened.
 - `/altinv search`, open the search window. `/altinv find potion` opens it searching for "potion".
 - `/altinv remove Name` (or `Name-Realm`), forget a deleted, renamed or transferred character.
 - `/altinv minimap`, show or hide the minimap button.
+- `/altinv mail`, list mail with items or gold expiring in the next 3 days. `/altinv mailwarn` turns the login warning off or on.
 - `/altinv lumber`, open the Lumber tab (Retail): every lumber type and Essence of Lumber on every character.
 
 ## Installation
