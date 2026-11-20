@@ -10,7 +10,7 @@
 --                                  mailExpiry = { { at, items, money } }  mail holding
 --                                    items or gold, when each one expires,
 --                                  mailItemExpiry = { [itemID] = soonest expiry },
---                                  money (copper),
+--                                  money (copper), seenAt (last login or logout, 2.0),
 --                                  currencies = { [currencyID] = amount },
 --                                  and what Characters.lua keeps } },
 --     warband = { [itemID] = count }, warbandScannedAt,
@@ -194,6 +194,14 @@ function ns.ScanWarband()
         ScanContainer(bagID, AltInventoryDB.warband)
     end
     AltInventoryDB.warbandScannedAt = time()
+end
+
+-- When this character was last on (2.0, the Characters page's Last played):
+-- written at login and logout.
+function ns.NoteSeen()
+    local key = ns.GetCharKey()
+    local data = key and AltInventoryDB.chars[key]
+    if data then data.seenAt = time() end
 end
 
 -- The mailbox can only be read while it's open. Items still attached to

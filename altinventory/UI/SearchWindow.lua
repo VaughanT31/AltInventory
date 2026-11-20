@@ -1,561 +1,175 @@
--- Alt Inventory - the search window: "where is my X?" across every
--- character, their banks and mail, and the warband bank. Characters shows
--- each one's bag space, item level, concentration and so on (Characters.lua),
--- and Play time shows time played by character, class, role or faction
--- (Played.lua).
+-- Alt Inventory - the main window (2.0): a title bar with the tabs, a page
+-- area, and a status bar. Each tab is a page in UI/Pages/ that registers
+-- itself with Window:AddPage and builds its own content.
 --
--- Opened with /altinv search (or /altinv find <text>) and from the
--- magnifier button on the bags' search box, which carries over whatever
--- was typed there.
+-- Opened with /altinv search (or /altinv find <text>), the minimap button
+-- and the magnifier on the bags' search box, which carries over whatever
+-- was typed there. The functions here (Open, Toggle, SetView, Refresh,
+-- QueueRefresh, AddBagButton) are what the rest of the addon calls.
 
 local _, ns = ...
+local Skin = ns.Skin
+local C = Skin.C
 
-local Window = {}
+local Window = { pages = {}, order = {} }
 ns.SearchWindow = Window
 
-local WIDTH, HEIGHT = 470, 500
-local ITEM_ROW, HOLDER_ROW = 26, 17
-local BAR_ROW = 22
-local BAR_LABEL, BAR_RIGHT = 120, 112
+local WIDTH, HEIGHT = 820, 520
+local TITLE_HEIGHT, STATUS_HEIGHT = 48, 28
 local REFRESH_DELAY = 0.15
 
-local PLACE_LABELS = {
-    { key = nil, label = "All places" },
-    { key = "bags", label = "Bags" },
-    { key = "bank", label = "Bank" },
-    { key = "mail", label = "Mail" },
-    { key = "warband", label = "Warband bank" },
-    { key = "currency", label = "Currencies" },
-}
+-- Older saved tab names.
+local VIEW_ALIASES = { lumber = "watch", played = "played", characters = "characters", search = "search" }
 
-local BACKDROP = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
-}
-
-local filters = { char = nil, place = nil, sort = "name" }
-
-local function QualityColor(quality)
-    local c = quality and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
-    if c then return c.r, c.g, c.b end
-    return 1, 1, 1
+-- page = { key, label, order, available = function() -> bool,
+--          Build(page, content), Refresh(page), Show(page, arg) }
+function Window:AddPage(page)
+    self.pages[page.key] = page
+    self.order[#self.order + 1] = page
+    table.sort(self.order, function(a, b) return (a.order or 99) < (b.order or 99) end)
 end
 
-local function ItemLink(itemID)
-    local getInfo = (C_Item and C_Item.GetItemInfo) or GetItemInfo
-    local _, link = getInfo(itemID)
-    return link
+local function Available(page)
+    return not page.available or page.available()
 end
 
--- Rows ----------------------------------------------------------------
-
-local function EnsureRegions(row)
-    if row.text then return end
-    row.highlight = row:CreateTexture(nil, "HIGHLIGHT")
-    row.highlight:SetAllPoints()
-    row.highlight:SetColorTexture(1, 1, 1, 0.06)
-    row.icon = row:CreateTexture(nil, "ARTWORK")
-    row.icon:SetSize(20, 20)
-    row.icon:SetPoint("LEFT", 4, 0)
-    row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    row.text:SetJustifyH("LEFT")
-    row.text:SetWordWrap(false)
-    row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    row.right:SetPoint("RIGHT", -6, 0)
-    row.right:SetJustifyH("RIGHT")
-    row.right:SetWordWrap(false)
-end
-
-local function InitRow(row, data)
-    EnsureRegions(row)
-    row.itemID, row.currencyID = data.itemID, data.currencyID
-    row.text:ClearAllPoints()
-    if data.kind == "item" then
-        local result = data.result
-        row.icon:Show()
-        row.icon:SetTexture(result.icon or 134400) -- question mark when unknown
-        row.text:SetFontObject("GameFontHighlight")
-        row.text:SetPoint("LEFT", row.icon, "RIGHT", 6, 0)
-        row.text:SetPoint("RIGHT", row.right, "LEFT", -8, 0)
-        row.text:SetText(result.name)
-        row.text:SetTextColor(QualityColor(result.quality))
-        row.right:SetText("|cffffd100Total " .. result.total .. "|r")
-    else
-        row.icon:Hide()
-        row.text:SetFontObject("GameFontHighlightSmall")
-        row.text:SetPoint("LEFT", 30, 0)
-        row.text:SetPoint("RIGHT", row.right, "LEFT", -8, 0)
-        row.text:SetTextColor(1, 1, 1)
-        if data.kind == "warband" then
-            row.text:SetText("|cff99ccffWarband Bank|r")
-            row.right:SetText(ns.WithAge(tostring(data.count), AltInventoryDB.warbandScannedAt))
-        else
-            row.text:SetText(data.holder.name)
-            row.right:SetText("|cffcccccc" .. data.holder.text .. "|r")
-        end
-    end
-    row:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        if self.currencyID then
-            GameTooltip:SetCurrencyByID(self.currencyID)
-        else
-            GameTooltip:SetItemByID(self.itemID)
-        end
-        GameTooltip:Show()
-    end)
-    row:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    row:SetScript("OnClick", function(self)
-        if IsModifiedClick and IsModifiedClick("CHATLINK") then
-            local link
-            if self.currencyID then
-                link = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyLink and C_CurrencyInfo.GetCurrencyLink(self.currencyID, 0)
-            else
-                link = ItemLink(self.itemID)
-            end
-            -- ChatEdit_InsertLink is only kept as a deprecated fallback now.
-            local insert = (ChatFrameUtil and ChatFrameUtil.InsertLink) or ChatEdit_InsertLink
-            if link and insert then insert(link) end
-        end
-    end)
-end
-
--- Play time rows: name, a bar as long as its share of the most played,
--- and "20.5%  47d 4h".
-local function InitBar(row, data)
-    if not row.bar then
-        row.highlight = row:CreateTexture(nil, "HIGHLIGHT")
-        row.highlight:SetAllPoints()
-        row.highlight:SetColorTexture(1, 1, 1, 0.06)
-        row.label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        row.label:SetPoint("LEFT", 6, 0)
-        row.label:SetWidth(BAR_LABEL - 10)
-        row.label:SetJustifyH("LEFT")
-        row.label:SetWordWrap(false)
-        row.back = row:CreateTexture(nil, "BACKGROUND")
-        row.back:SetPoint("LEFT", BAR_LABEL, 0)
-        row.back:SetPoint("RIGHT", -BAR_RIGHT, 0)
-        row.back:SetHeight(14)
-        row.back:SetColorTexture(1, 1, 1, 0.05)
-        row.bar = row:CreateTexture(nil, "ARTWORK")
-        row.bar:SetPoint("LEFT", BAR_LABEL, 0)
-        row.bar:SetHeight(14)
-        row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.right:SetPoint("RIGHT", -6, 0)
-        row.right:SetJustifyH("RIGHT")
-    end
-    local e = data.entry
-    local r, g, b = e.color[1], e.color[2], e.color[3]
-    row.label:SetText(e.label)
-    row.label:SetTextColor(r, g, b)
-    row.bar:SetColorTexture(r, g, b, 0.85)
-    row.bar:SetWidth(math.max(1, data.width * e.seconds / math.max(1, data.top)))
-    row.right:SetText(("|cffffd100%.1f%%|r  %s"):format(100 * e.seconds / math.max(1, data.total), ns.Played.Format(e.seconds)))
-    row:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(e.label, r, g, b)
-        GameTooltip:AddLine(ns.Played.Format(e.seconds), 1, 1, 1)
-        if data.group ~= "character" then
-            GameTooltip:AddLine(e.count .. (e.count == 1 and " character" or " characters"), 0.8, 0.8, 0.8)
-        end
-        GameTooltip:Show()
-    end)
-    row:SetScript("OnLeave", function() GameTooltip:Hide() end)
-end
-
--- Characters tab rows: a character, a section title, or a line.
-local INFO_ROWS = { character = 36, section = 18, line = 16 }
-
-local function InitInfo(row, data)
-    if not row.text then
-        row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        row.text:SetJustifyH("LEFT")
-        row.text:SetWordWrap(false)
-        row.sub = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.sub:SetJustifyH("LEFT")
-        row.sub:SetWordWrap(false)
-        row.sub:SetPoint("BOTTOMLEFT", 6, 3)
-        row.sub:SetPoint("RIGHT", -6, 0)
-        row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.right:SetPoint("RIGHT", -6, 0)
-        row.right:SetJustifyH("RIGHT")
-        row.icon = row:CreateTexture(nil, "ARTWORK")
-        row.icon:SetSize(14, 14)
-        row.icon:SetPoint("LEFT", 22, 0)
-        row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        -- Character rows: a plus or minus to fold the character away.
-        row.fold = row:CreateTexture(nil, "ARTWORK")
-        row.fold:SetSize(14, 14)
-        row.fold:SetPoint("TOPLEFT", 6, -4)
-        row.hover = row:CreateTexture(nil, "HIGHLIGHT")
-        row.hover:SetAllPoints()
-        row.hover:SetColorTexture(1, 1, 1, 0.06)
-    end
-    row.text:ClearAllPoints()
-    row.icon:SetShown(data.icon ~= nil)
-    row.icon:SetTexture(data.icon or 134400)
-    row.sub:SetText("")
-    row.right:SetText("")
-    local isCharacter = data.kind == "character"
-    row.fold:SetShown(isCharacter)
-    row:EnableMouse(isCharacter)
-    row:SetScript("OnMouseUp", isCharacter and function(_, button)
-        if button == "LeftButton" then Window:ToggleCharacter(data.block.key, IsShiftKeyDown()) end
-    end or nil)
-    row:SetScript("OnEnter", isCharacter and function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:AddLine(data.collapsed and "Click to show this character" or "Click to fold this character away", 1, 1, 1)
-        GameTooltip:AddLine("Shift-click to do it for every character", 0.8, 0.8, 0.8)
-        GameTooltip:Show()
-    end or nil)
-    row:SetScript("OnLeave", isCharacter and function() GameTooltip:Hide() end or nil)
-    if isCharacter then
-        row.fold:SetTexture(data.collapsed and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up")
-        row.text:SetFontObject("GameFontHighlight")
-        row.text:SetPoint("TOPLEFT", 24, -3)
-        row.text:SetPoint("RIGHT", -6, 0)
-        row.text:SetText(data.block.name .. " |cff999999" .. (data.block.key:match("%-(.+)$") or "") .. "|r")
-        row.sub:SetPoint("BOTTOMLEFT", 24, 3)
-        row.sub:SetText("|cffcccccc" .. data.block.summary .. "|r")
-    elseif data.kind == "section" then
-        row.text:SetFontObject("GameFontNormalSmall")
-        row.text:SetPoint("LEFT", 14, 0)
-        row.text:SetPoint("RIGHT", -6, 0)
-        row.text:SetText(data.title)
-    else
-        row.text:SetFontObject("GameFontHighlightSmall")
-        row.text:SetPoint("LEFT", data.icon and 40 or 22, 0)
-        row.text:SetPoint("RIGHT", row.right, "LEFT", -8, 0)
-        row.text:SetText(data.line.label)
-        row.right:SetText(data.line.value or "")
-    end
-end
-
--- Tabs at the top: gold and underlined when chosen.
-local function Tab(parent, text)
-    local tab = CreateFrame("Button", nil, parent)
-    tab:SetHeight(20)
-    tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    tab.text:SetPoint("CENTER", 0, 1)
-    tab.text:SetText(text)
-    tab:SetWidth(tab.text:GetStringWidth() + 18)
-    tab.line = tab:CreateTexture(nil, "ARTWORK")
-    tab.line:SetColorTexture(1, 0.82, 0, 0.8)
-    tab.line:SetHeight(2)
-    tab.line:SetPoint("BOTTOMLEFT", 6, 0)
-    tab.line:SetPoint("BOTTOMRIGHT", -6, 0)
-    function tab:SetActive(on)
-        self.text:SetTextColor(on and 1 or 0.6, on and 0.82 or 0.6, on and 0 or 0.6)
-        self.line:SetShown(on)
-    end
-    return tab
-end
-
--- Building -------------------------------------------------------------
-
-local function Dropdown(parent, width)
-    local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
-    dropdown:SetWidth(width)
-    return dropdown
+function Window:SetStatus(left, right)
+    if not self.frame then return end
+    self.statusLeft:SetText(left or "")
+    self.statusRight:SetText(right or "")
 end
 
 function Window:Build()
     local f = CreateFrame("Frame", "AltInventorySearchFrame", UIParent, "BackdropTemplate")
     f:SetSize(WIDTH, HEIGHT)
-    f:SetBackdrop(BACKDROP)
-    f:SetBackdropColor(0.06, 0.06, 0.07, 0.96)
-    f:SetBackdropBorderColor(0.3, 0.28, 0.24, 0.9)
+    Skin.Panel(f, C.window, C.line)
     f:SetFrameStrata("DIALOG")
     f:SetToplevel(true)
     f:SetClampedToScreen(true)
     f:SetMovable(true)
     f:EnableMouse(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", f.StartMoving)
-    f:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        local point, _, _, x, y = self:GetPoint()
-        AltInventoryDB.window = { point = point, x = x, y = y }
-    end)
     local saved = AltInventoryDB.window
     if saved and saved.point then
         f:SetPoint(saved.point, UIParent, saved.point, saved.x, saved.y)
     else
         f:SetPoint("CENTER")
     end
+    if AltInventoryDB.windowScale then f:SetScale(AltInventoryDB.windowScale) end
     f:Hide()
     table.insert(UISpecialFrames, "AltInventorySearchFrame")
     self.frame = f
 
-    local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOPLEFT", 12, -10)
+    -- Title bar: drags the window.
+    local bar = Skin.Frame(f, C.bar)
+    bar:SetPoint("TOPLEFT", 1, -1)
+    bar:SetPoint("TOPRIGHT", -1, -1)
+    bar:SetHeight(TITLE_HEIGHT - 1)
+    bar:EnableMouse(true)
+    bar:RegisterForDrag("LeftButton")
+    bar:SetScript("OnDragStart", function() f:StartMoving() end)
+    bar:SetScript("OnDragStop", function()
+        f:StopMovingOrSizing()
+        local point, _, _, x, y = f:GetPoint()
+        AltInventoryDB.window = { point = point, x = x, y = y }
+    end)
+    local barLine = Skin.Fill(bar, C.line, "BORDER")
+    barLine:SetHeight(1)
+    barLine:SetPoint("BOTTOMLEFT", bar, "BOTTOMLEFT", 0, -1)
+    barLine:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 0, -1)
+
+    local badge = Skin.Frame(bar, C.goldDeep, C.goldLine)
+    badge:SetSize(26, 26)
+    badge:SetPoint("LEFT", 14, 0)
+    local badgeIcon = badge:CreateTexture(nil, "ARTWORK")
+    badgeIcon:SetPoint("TOPLEFT", 3, -3)
+    badgeIcon:SetPoint("BOTTOMRIGHT", -3, 3)
+    badgeIcon:SetTexture("Interface\\AddOns\\AltInventory\\icon")
+    local title = Skin.Text(bar, 16, C.gold, true)
+    title:SetPoint("LEFT", badge, "RIGHT", 10, 0)
     title:SetText("Alt Inventory")
+
     self.tabs = {}
     local previous
-    local tabs = { { "search", "Search" }, { "characters", "Characters" }, { "played", "Play time" } }
-    -- Lumber (player housing) is Retail only.
-    if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then tabs[#tabs + 1] = { "lumber", "Lumber" } end
-    for _, t in ipairs(tabs) do
-        local tab = Tab(f, t[2])
-        if previous then tab:SetPoint("LEFT", previous, "RIGHT", 2, 0) else tab:SetPoint("LEFT", title, "RIGHT", 10, -1) end
-        tab:SetScript("OnClick", function() Window:SetView(t[1]) end)
-        self.tabs[t[1]] = tab
-        previous = tab
+    for _, page in ipairs(self.order) do
+        if Available(page) then
+            local tab = Skin.Button(bar, page.label, nil, 28)
+            Skin.Panel(tab, C.bar)
+            -- Tabs: plain text until chosen, then the gold pill.
+            local SetActive = tab.SetActive
+            function tab:SetActive(on)
+                SetActive(self, on)
+                if not on then Skin.Panel(self, C.bar) end
+            end
+            tab:SetActive(false)
+            if previous then tab:SetPoint("LEFT", previous, "RIGHT", 4, 0) else tab:SetPoint("LEFT", title, "RIGHT", 22, 0) end
+            tab:SetScript("OnClick", function() Window:SetView(page.key) end)
+            self.tabs[page.key] = tab
+            previous = tab
+        end
     end
 
-    local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-    close:SetPoint("TOPRIGHT", 2, 2)
+    local close = Skin.CloseButton(bar)
+    close:SetPoint("RIGHT", -10, 0)
+    close:SetScript("OnClick", function() f:Hide() end)
 
-    local box = CreateFrame("EditBox", nil, f, "SearchBoxTemplate")
-    box:SetSize(WIDTH - 24, 22)
-    box:SetPoint("TOPLEFT", 16, -36)
-    box:SetAutoFocus(false)
-    box:HookScript("OnTextChanged", function() Window:QueueRefresh() end)
-    box:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-    self.box = box
+    -- Status bar.
+    local status = Skin.Frame(f, C.side)
+    status:SetPoint("BOTTOMLEFT", 1, 1)
+    status:SetPoint("BOTTOMRIGHT", -1, 1)
+    status:SetHeight(STATUS_HEIGHT - 1)
+    local statusLine = Skin.Fill(status, C.line, "BORDER")
+    statusLine:SetHeight(1)
+    statusLine:SetPoint("TOPLEFT", status, "TOPLEFT", 0, 1)
+    statusLine:SetPoint("TOPRIGHT", status, "TOPRIGHT", 0, 1)
+    self.statusLeft = Skin.Text(status, 11, C.dim)
+    self.statusLeft:SetPoint("LEFT", 14, 0)
+    self.statusRight = Skin.Text(status, 11, C.dim)
+    self.statusRight:SetPoint("RIGHT", -14, 0)
+    self.statusRight:SetJustifyH("RIGHT")
+    self.statusLeft:SetPoint("RIGHT", self.statusRight, "LEFT", -12, 0)
 
-    -- Drop an item on the box (or shift-click one) to search for it.
-    box:HookScript("OnReceiveDrag", function(self)
-        local kind, itemID = GetCursorInfo()
-        if kind == "item" and itemID then
-            self:SetText(tostring(itemID))
-            ClearCursor()
-        end
-    end)
+    -- Page area: each page gets its own frame here, built the first time it shows.
+    local content = CreateFrame("Frame", nil, f)
+    content:SetPoint("TOPLEFT", 1, -TITLE_HEIGHT)
+    content:SetPoint("BOTTOMRIGHT", -1, STATUS_HEIGHT)
+    self.content = content
 
-    local charDrop = Dropdown(f, 160)
-    charDrop:SetPoint("TOPLEFT", box, "BOTTOMLEFT", -6, -8)
-    charDrop:SetupMenu(function(_, root)
-        root:CreateRadio("All characters", function() return filters.char == nil end, function()
-            filters.char = nil
-            Window:Refresh()
-        end)
-        for _, key in ipairs(ns.Search.Characters()) do
-            local data = AltInventoryDB.chars[key]
-            root:CreateRadio(ns.ClassName(key, data.class) .. " |cff999999" .. (key:match("%-(.+)$") or "") .. "|r",
-                function() return filters.char == key end,
-                function() filters.char = key; Window:Refresh() end)
-        end
-    end)
-    self.charDrop = charDrop
-
-    local placeDrop = Dropdown(f, 130)
-    placeDrop:SetPoint("LEFT", charDrop, "RIGHT", 6, 0)
-    placeDrop:SetupMenu(function(_, root)
-        for _, place in ipairs(PLACE_LABELS) do
-            if place.key ~= "warband" or ns.HAS_WARBAND then
-                root:CreateRadio(place.label, function() return filters.place == place.key end,
-                    function() filters.place = place.key; Window:Refresh() end)
-            end
-        end
-    end)
-
-    local sortDrop = Dropdown(f, 120)
-    sortDrop:SetPoint("LEFT", placeDrop, "RIGHT", 6, 0)
-    sortDrop:SetupMenu(function(_, root)
-        root:CreateRadio("Sort: name", function() return filters.sort == "name" end,
-            function() filters.sort = "name"; Window:Refresh() end)
-        root:CreateRadio("Sort: total", function() return filters.sort == "total" end,
-            function() filters.sort = "total"; Window:Refresh() end)
-    end)
-
-    local line = f:CreateTexture(nil, "ARTWORK")
-    line:SetColorTexture(1, 0.82, 0, 0.2)
-    line:SetHeight(1)
-    line:SetPoint("TOPLEFT", 10, -100)
-    line:SetPoint("TOPRIGHT", -10, -100)
-
-    local scrollBox = CreateFrame("Frame", nil, f, "WowScrollBoxList")
-    scrollBox:SetPoint("TOPLEFT", 10, -106)
-    scrollBox:SetPoint("BOTTOMRIGHT", -26, 30)
-    local scrollBar = CreateFrame("EventFrame", nil, f, "MinimalScrollBar")
-    scrollBar:SetPoint("TOPLEFT", scrollBox, "TOPRIGHT", 6, 0)
-    scrollBar:SetPoint("BOTTOMLEFT", scrollBox, "BOTTOMRIGHT", 6, 0)
-    local view = CreateScrollBoxListLinearView()
-    view:SetElementExtentCalculator(function(_, data) return data.kind == "item" and ITEM_ROW or HOLDER_ROW end)
-    view:SetElementInitializer("Button", InitRow)
-    ScrollUtil.InitScrollBoxListWithScrollBar(scrollBox, scrollBar, view)
-    self.scrollBox = scrollBox
-
-    local status = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    status:SetPoint("BOTTOMLEFT", 12, 10)
-    status:SetPoint("BOTTOMRIGHT", -12, 10)
-    status:SetJustifyH("LEFT")
-    self.status = status
-
-    local empty = f:CreateFontString(nil, "OVERLAY", "GameFontDisable")
-    empty:SetPoint("TOPLEFT", scrollBox, "TOPLEFT", 10, -20)
-    empty:SetPoint("TOPRIGHT", scrollBox, "TOPRIGHT", -10, -20)
-    empty:SetJustifyH("CENTER")
-    self.empty = empty
-    self.searchParts = { box, charDrop, placeDrop, sortDrop, line, scrollBox, scrollBar, empty }
-
-    -- Play time
-    self.group = AltInventoryDB.playedGroup or "character"
-    local groupDrop = Dropdown(f, 160)
-    groupDrop:SetPoint("TOPLEFT", 10, -38)
-    groupDrop:SetupMenu(function(_, root)
-        for _, key in ipairs(ns.Played.GROUP_ORDER) do
-            root:CreateRadio(ns.Played.GROUP_LABELS[key], function() return Window.group == key end, function()
-                Window.group = key
-                AltInventoryDB.playedGroup = key
-                Window:Refresh()
-            end)
-        end
-    end)
-    local playLine = f:CreateTexture(nil, "ARTWORK")
-    playLine:SetColorTexture(1, 0.82, 0, 0.2)
-    playLine:SetHeight(1)
-    playLine:SetPoint("TOPLEFT", 10, -70)
-    playLine:SetPoint("TOPRIGHT", -10, -70)
-    local playBox = CreateFrame("Frame", nil, f, "WowScrollBoxList")
-    playBox:SetPoint("TOPLEFT", 10, -76)
-    playBox:SetPoint("BOTTOMRIGHT", -26, 30)
-    local playBar = CreateFrame("EventFrame", nil, f, "MinimalScrollBar")
-    playBar:SetPoint("TOPLEFT", playBox, "TOPRIGHT", 6, 0)
-    playBar:SetPoint("BOTTOMLEFT", playBox, "BOTTOMRIGHT", 6, 0)
-    local playView = CreateScrollBoxListLinearView()
-    playView:SetElementExtent(BAR_ROW)
-    playView:SetElementInitializer("Button", InitBar)
-    ScrollUtil.InitScrollBoxListWithScrollBar(playBox, playBar, playView)
-    self.playBox = playBox
-    local playEmpty = f:CreateFontString(nil, "OVERLAY", "GameFontDisable")
-    playEmpty:SetPoint("TOPLEFT", playBox, "TOPLEFT", 10, -20)
-    playEmpty:SetPoint("TOPRIGHT", playBox, "TOPRIGHT", -10, -20)
-    playEmpty:SetJustifyH("CENTER")
-    self.playEmpty = playEmpty
-    self.playedParts = { groupDrop, playLine, playBox, playBar, playEmpty }
-
-    -- Characters
-    local infoBox = CreateFrame("Frame", nil, f, "WowScrollBoxList")
-    infoBox:SetPoint("TOPLEFT", 10, -38)
-    infoBox:SetPoint("BOTTOMRIGHT", -26, 30)
-    local infoBar = CreateFrame("EventFrame", nil, f, "MinimalScrollBar")
-    infoBar:SetPoint("TOPLEFT", infoBox, "TOPRIGHT", 6, 0)
-    infoBar:SetPoint("BOTTOMLEFT", infoBox, "BOTTOMRIGHT", 6, 0)
-    local infoView = CreateScrollBoxListLinearView()
-    infoView:SetElementExtentCalculator(function(_, data) return INFO_ROWS[data.kind] end)
-    infoView:SetElementInitializer("Frame", InitInfo)
-    ScrollUtil.InitScrollBoxListWithScrollBar(infoBox, infoBar, infoView)
-    self.infoBox = infoBox
-    self.characterParts = { infoBox, infoBar }
-
-    local view = AltInventoryDB.windowView
-    self.view = (view == "played" or view == "characters" or (view == "lumber" and self.tabs.lumber)) and view or "search"
-    self:ShowView()
+    local view = VIEW_ALIASES[AltInventoryDB.windowView or "search"] or "search"
+    if not self.pages[view] or not Available(self.pages[view]) then view = "search" end
+    self.view = view
 end
 
-function Window:ShowView()
-    -- Lumber uses the search list with a fixed set of items, so no search box.
-    local list = self.view == "search" or self.view == "lumber"
-    for _, part in ipairs(self.searchParts) do part:SetShown(list and (part ~= self.box or self.view == "search")) end
-    for _, part in ipairs(self.playedParts) do part:SetShown(self.view == "played") end
-    for _, part in ipairs(self.characterParts) do part:SetShown(self.view == "characters") end
-    for key, tab in pairs(self.tabs) do tab:SetActive(key == self.view) end
+function Window:PageFrame(page)
+    if not page.frame then
+        page.frame = CreateFrame("Frame", nil, self.content)
+        page.frame:SetAllPoints()
+        page.frame:Hide()
+        page:Build(page.frame)
+    end
+    return page.frame
 end
 
-function Window:SetView(view)
+-- Shows a tab. arg goes to the page (a character key, a watch list, text).
+function Window:SetView(view, arg)
     if not self.frame then self:Build() end
+    view = VIEW_ALIASES[view] or view
+    local page = self.pages[view]
+    if not page or not Available(page) then page, view = self.pages.search, "search" end
     self.view = view
     AltInventoryDB.windowView = view
-    self:ShowView()
-    if view == "played" then
-        -- This character's time, if login couldn't ask for it quietly.
-        local data = AltInventoryDB.chars[ns.GetCharKey()]
-        if data and not data.played then ns.Played:Request(false) end
-    elseif view == "search" then
-        self.box:SetFocus()
+    for key, other in pairs(self.pages) do
+        if other.frame then other.frame:SetShown(key == view) end
     end
+    self:PageFrame(page):Show()
+    for key, tab in pairs(self.tabs) do tab:SetActive(key == view) end
+    if page.Show then page:Show(arg) end
     self:Refresh()
 end
 
-function Window:RefreshPlayed()
-    local list, total, missing = ns.Played.List(self.group)
-    local top = list[1] and list[1].seconds or 1
-    local width = math.max(40, self.playBox:GetWidth() - BAR_LABEL - BAR_RIGHT)
-    local elements = {}
-    for _, entry in ipairs(list) do
-        elements[#elements + 1] = { entry = entry, top = top, total = total, width = width, group = self.group }
-    end
-    self.playBox:SetDataProvider(CreateDataProvider(elements), ScrollBoxConstants.RetainScrollPosition)
-    self.playEmpty:SetText(#list == 0 and "No time played recorded yet. It's read when each character logs in." or "")
-    local text = "|cffffd100Total: " .. ns.Played.Format(total) .. "|r"
-    if missing > 0 then
-        text = text .. ("  |cff999999%d character%s not recorded yet: log in on %s once.|r"):format(missing,
-            missing == 1 and "" or "s", missing == 1 and "it" or "each")
-    end
-    self.status:SetText(text)
+-- Opens a character's bag viewer.
+function Window:OpenCharacter(key)
+    self:SetView("search", { character = key })
 end
-
-function Window:RefreshCharacters()
-    local elements = {}
-    local blocks, waiting = ns.Characters.Blocks()
-    local collapsed = AltInventoryDB.collapsed
-    for _, block in ipairs(blocks) do
-        local folded = collapsed[block.key] == true
-        elements[#elements + 1] = { kind = "character", block = block, collapsed = folded }
-        if not folded then
-            for _, section in ipairs(block.sections) do
-                elements[#elements + 1] = { kind = "section", title = section.title }
-                for _, line in ipairs(section.lines) do
-                    elements[#elements + 1] = { kind = "line", line = line, icon = line.icon }
-                end
-            end
-        end
-    end
-    self.infoBox:SetDataProvider(CreateDataProvider(elements), ScrollBoxConstants.RetainScrollPosition)
-    local text = "As of each character's last login. Concentration and cooldowns show after opening each profession once."
-    if waiting > 0 then
-        text = ("%d more character%s will show here after logging in. Click a name to fold it away."):format(waiting,
-            waiting == 1 and "" or "s")
-    end
-    self.status:SetText(text)
-end
-
--- Every lumber type and Essence of Lumber, with who holds them, in the
--- search list. The character, place and sort filters still apply.
-function Window:RefreshLumber()
-    local ids = { [ns.Search.ESSENCE_ID] = true }
-    for _, itemID in ipairs(ns.Search.LUMBER_IDS) do ids[itemID] = true end
-    local results, found = ns.Search.Find({ ids = ids }, filters)
-    local elements = {}
-    local essence = 0
-    for _, result in ipairs(results) do
-        if result.itemID == ns.Search.ESSENCE_ID then essence = result.total end
-        elements[#elements + 1] = { kind = "item", itemID = result.itemID, result = result }
-        for _, holder in ipairs(result.holders) do
-            elements[#elements + 1] = { kind = "holder", itemID = result.itemID, holder = holder }
-        end
-        if result.warband > 0 then
-            elements[#elements + 1] = { kind = "warband", itemID = result.itemID, count = result.warband }
-        end
-    end
-    self.scrollBox:SetDataProvider(CreateDataProvider(elements), ScrollBoxConstants.RetainScrollPosition)
-    self.empty:SetText(found == 0 and "No lumber yet.\n\nLumber shows here once a character holding it logs in, or the warband bank is opened." or "")
-    local Number = BreakUpLargeNumbers or tostring
-    local text = ("%d kind%s of lumber across your characters and the warband bank."):format(found, found == 1 and "" or "s")
-    if essence > 0 then
-        text = text .. (" Your %s Essence of Lumber trade%s for %s more at your neighborhood lumberjack."):format(
-            Number(essence), essence == 1 and "s" or "", Number(essence * 20))
-    end
-    self.status:SetText(text)
-end
-
--- Folds a character away on the Characters tab, or opens it again. With
--- all, every character follows the one clicked.
-function Window:ToggleCharacter(key, all)
-    local collapsed = AltInventoryDB.collapsed
-    local fold = not collapsed[key]
-    if all then
-        for _, block in ipairs((ns.Characters.Blocks())) do collapsed[block.key] = fold or nil end
-    else
-        collapsed[key] = fold or nil
-    end
-    self:RefreshCharacters()
-end
-
--- Refreshing ------------------------------------------------------------
 
 function Window:QueueRefresh()
     if self.pending then return end
@@ -568,49 +182,15 @@ end
 
 function Window:Refresh()
     if not self.frame or not self.frame:IsShown() then return end
-    if self.view == "played" then return self:RefreshPlayed() end
-    if self.view == "characters" then return self:RefreshCharacters() end
-    if self.view == "lumber" then return self:RefreshLumber() end
-    local text = self.box:GetText()
-    local results, found = ns.Search.Find(text, filters)
-    local elements = {}
-    for _, result in ipairs(results) do
-        elements[#elements + 1] = { kind = "item", itemID = result.itemID, currencyID = result.currencyID, result = result }
-        for _, holder in ipairs(result.holders) do
-            elements[#elements + 1] = { kind = "holder", itemID = result.itemID, currencyID = result.currencyID, holder = holder }
-        end
-        if result.warband > 0 then
-            elements[#elements + 1] = { kind = "warband", itemID = result.itemID, count = result.warband }
-        end
-    end
-    self.scrollBox:SetDataProvider(CreateDataProvider(elements), ScrollBoxConstants.RetainScrollPosition)
-
-    local hasQuery = ns.Search.ParseQuery(text) ~= nil
-    if not hasQuery then
-        self.empty:SetText("Type part of an item's name, or drop an item here.")
-    elseif found == 0 then
-        self.empty:SetText("No matches.\n\nCharacters you haven't logged into since installing Alt Inventory aren't included, and banks and mail only count once they've been opened.")
-    else
-        self.empty:SetText("")
-    end
-    local chars = #ns.Search.Characters()
-    if found > #results then
-        self.status:SetText(("Showing %d of %d items. Type more to narrow it down."):format(#results, found))
-    elseif hasQuery then
-        self.status:SetText(("%d item%s across %d character%s."):format(found, found == 1 and "" or "s", chars, chars == 1 and "" or "s"))
-    else
-        self.status:SetText(("%d character%s tracked."):format(chars, chars == 1 and "" or "s"))
-    end
+    local page = self.pages[self.view]
+    if page and page.frame and page.Refresh then page:Refresh() end
 end
 
 function Window:Open(text)
     if not self.frame then self:Build() end
     self.frame:Show()
     -- Opening with something to find goes to Search.
-    if text then
-        self.box:SetText(text)
-        return self:SetView("search")
-    end
+    if text then return self:SetView("search", { text = text }) end
     self:SetView(self.view)
 end
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.0
+
+**A new look.** The Alt Inventory window has been redesigned from the ground up: wider, darker and easier to read, with the same look on Retail, WoW Forever and every Classic version.
+
+- **Search:** your characters now sit down the left, grouped by realm with their class colour and item level. Results are cards: the item in its quality colour, the total, a bar showing who holds most of it, and every holder underneath. Filter by place with one click, and sort by name or most held.
+- **See any character's bags:** click a character on the left to see their bags, bank, mail and the warband bank as icon grids, without logging in. Hover an item for its tooltip, shift-click to link it.
+- **Characters:** summary cards for your total gold, characters seen, highest item level and profession cooldowns ready, then a table you can sort by item level, gold, bag space, reagent bag or last played. Hover a character for concentration, Moxie, cooldowns and this patch's currencies; click for their bags.
+- **Play time:** the same bars, in the new look, with your total on top.
+- **Watch lists (was Lumber):** built-in lists for Lumber (Retail, with your Essence of Lumber on top), Consumables and Trade goods, plus your own lists. Make one with New list, drop items on it to add them, right-click a card to take one off.
+- **Last played** is saved from now on, so each character fills it in the next time you log in on them.
+
 ## 1.13.0
 
 - **Expiring mail warning:** when you log in, Alt Inventory warns you about mail with items or gold that expires within 3 days, on any of your characters, so nothing gets returned or deleted while you're on another alt. Item tooltips and search show it too, for example "Mail: 3 (expires in 1d 4h)". `/altinv mail` lists it any time, and `/altinv mailwarn` turns the login warning off or on. Times are as of the last time each character opened its mailbox.

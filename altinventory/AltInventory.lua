@@ -7,7 +7,9 @@
 --   Search.lua             finding items by name
 --   Played.lua             time played per character
 --   Characters.lua         bag space, item level, concentration, Moxie, cooldowns, this patch's currencies
---   UI/SearchWindow.lua    the search window (Search, Characters and Play time) and the bag button
+--   UI/Skin.lua            the 2.0 look: colours, panels, buttons, lists
+--   UI/SearchWindow.lua    the main window (title bar, tabs, status bar) and the bag button
+--   UI/Pages/*.lua         its pages: Search (with the bag viewer), Characters, Play time, Watch lists
 --   UI/ReagentFinder.lua   who else holds a recipe's materials, beside the profession window
 --   UI/MinimapButton.lua   the minimap button and addon compartment entry
 -- This file: events and the slash command.
@@ -231,6 +233,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
         ns.InitDB()
         ns.ScanBags()
         ns.TidyNames()
+        ns.NoteSeen()
         ns.SearchWindow:AddBagButton()
         ns.MinimapButton:Create()
         ns.ScanMoney()
@@ -293,6 +296,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
         ns.Played:OnTimePlayed(...)
         ns.SearchWindow:QueueRefresh()
     elseif event == "PLAYER_LOGOUT" then
+        ns.NoteSeen()
         ns.Played:Save()
     elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
         local unit = ...
