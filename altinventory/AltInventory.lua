@@ -132,9 +132,12 @@ SlashCmdList.ALTINVENTORY = function(msg)
     elseif cmd == "characters" or cmd == "chars" then
         ns.SearchWindow:Open()
         ns.SearchWindow:SetView("characters")
+    elseif cmd == "watch" then
+        ns.SearchWindow:Open()
+        ns.SearchWindow:SetView("watch")
     elseif cmd == "lumber" and WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
         ns.SearchWindow:Open()
-        ns.SearchWindow:SetView("lumber")
+        ns.SearchWindow:SetView("watch", "lumber")
     elseif cmd == "mail" then
         WarnExpiringMail(true)
     elseif cmd == "mailwarn" then
@@ -163,7 +166,8 @@ SlashCmdList.ALTINVENTORY = function(msg)
         Print("/altinv search - search all your characters")
         Print("/altinv find Name - search for an item")
         Print("/altinv remove Name - forget a character")
-        Print("/altinv characters - bag space, item level, concentration, Moxie, cooldowns and currencies")
+        Print("/altinv characters - gold, item level, bag space and last played for every character")
+        Print("/altinv watch - your watch lists, plus consumables and trade goods")
         if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
             Print("/altinv lumber - lumber and Essence of Lumber on every character")
         end

@@ -188,7 +188,9 @@ local function InitRow(row, data)
     row:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
 
--- A summary card: caption on top, big value, small note beside it.
+-- A summary card: caption on top, big value. A short note goes on the
+-- caption row (note), a longer one on the value row (side) so it never
+-- squeezes the caption.
 local function Card(parent)
     local card = Skin.Frame(parent, C.bar, C.lineSoft)
     card:SetHeight(56)
@@ -200,6 +202,10 @@ local function Card(parent)
     card.note:SetPoint("TOPRIGHT", -12, -9)
     card.note:SetJustifyH("RIGHT")
     card.caption:SetPoint("RIGHT", card.note, "LEFT", -6, 0)
+    card.side = Skin.Text(card, 11, C.dim)
+    card.side:SetPoint("BOTTOMRIGHT", -12, 12)
+    card.side:SetJustifyH("RIGHT")
+    card.side:SetPoint("LEFT", card.value, "RIGHT", 8, 0)
     return card
 end
 
@@ -291,13 +297,13 @@ function Page:Refresh()
     cards[3].caption:SetText("HIGHEST ITEM LEVEL")
     cards[3].value:SetText(best and Skin.ItemLevel(best) or "-")
     if bestKey then
-        cards[3].note:SetText(Short(bestKey))
-        Skin.SetColor(cards[3].note, Skin.ClassColor(AltInventoryDB.chars[bestKey].class))
+        cards[3].side:SetText(Short(bestKey))
+        Skin.SetColor(cards[3].side, Skin.ClassColor(AltInventoryDB.chars[bestKey].class))
     end
     cards[4].caption:SetText("COOLDOWNS READY")
     cards[4].value:SetText(tostring(ready))
     Skin.SetColor(cards[4].value, ready > 0 and C.green or C.text)
-    cards[4].note:SetText(ready > 0 and "professions" or "")
+    cards[4].side:SetText(ready > 0 and "professions" or "")
 
     Window:SetStatus("Click a character to see their bags, bank and mail. Click a column to sort.",
         waiting > 0 and (waiting .. " not seen yet: log in once on each") or "")

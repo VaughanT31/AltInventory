@@ -8,7 +8,7 @@
 - **See any character's bags:** click a character on the left to see their bags, bank, mail and the warband bank as icon grids, without logging in. Hover an item for its tooltip, shift-click to link it.
 - **Characters:** summary cards for your total gold, characters seen, highest item level and profession cooldowns ready, then a table you can sort by item level, gold, bag space, reagent bag or last played. Hover a character for concentration, Moxie, cooldowns and this patch's currencies; click for their bags.
 - **Play time:** the same bars, in the new look, with your total on top.
-- **Watch lists (was Lumber):** built-in lists for Lumber (Retail, with your Essence of Lumber on top), Consumables and Trade goods, plus your own lists. Make one with New list, drop items on it to add them, right-click a card to take one off.
+- **Watch lists (was Lumber):** built-in lists for Lumber (Retail, with your Essence of Lumber on top), Consumables and Trade goods, plus your own lists. Make one with New list, drop items on it to add them, right-click a card to take one off. `/altinv watch` opens them, and `/altinv lumber` still opens the Lumber list.
 - **Last played** is saved from now on, so each character fills it in the next time you log in on them.
 
 ## 1.13.0

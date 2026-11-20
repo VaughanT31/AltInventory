@@ -1,13 +1,13 @@
 # Alt Inventory
 
-A lightweight World of Warcraft addon that shows, in an item's tooltip, how many of that item each of your alts is holding, broken down by Bags, Character Bank, Mail and Warband Bank. A search window finds any item across all of them by name.
+A lightweight World of Warcraft addon that shows, in an item's tooltip, how many of that item each of your alts is holding, broken down by Bags, Character Bank, Mail and Warband Bank. Its window (redesigned in 2.0) searches every character at once, shows any character's bags without logging in, and has tabs for your characters, play time and watch lists.
 
 **New here?** The [wiki](wiki/Home.md) explains every feature step by step (also on the [website](https://ctrlshiftzed.com/wiki/alt-inventory/)). Questions it doesn't answer: ask on [Discord](https://discord.gg/wz7fw6jM9Z).
 
 Built as a minimal alternative to TradeSkillMaster's inventory tooltip, without TSM's memory footprint or crash surface.
 
-- **Target patch:** 12.1.0 and up (Midnight)
-- **Interface version:** `120100`
+- **Version:** 2.0.0
+- **Interface versions:** `120105` (Retail), `16001` (WoW Forever), `50504` (Mists Classic), `20506` (Burning Crusade Anniversary), `11509` (Classic Era)
 
 ## Game versions
 
@@ -28,15 +28,21 @@ Four storage locations are tracked: Bags, Character Bank, Mail (items attached t
 
 It also keeps each character's gold (hover the minimap button for every character's gold, the Warband Bank's and the total) and their currencies that can be transferred between characters: hover one to see how much each character has, or search for it by name with the *Currencies* filter.
 
-The window's *Play time* tab shows how long you've played on each character, and added up by class, role (from each character's current spec) or faction. A character's time is read when you log into it.
+## The window
 
-The *Characters* tab (`/altinv characters`) shows each character's item level, free bag slots, concentration, Moxie, profession cooldowns and this patch's currencies. Beside the profession window, the reagent finder lists who else holds the materials for the recipe or order on screen (`/altinv reagents` turns it off and on). Shift-drag a panel by its title to move the whole column, and Shift-right-click it to put it back; the spot is remembered.
+Click the magnifier in your bags' search box or the Alt Inventory button on the minimap (also in the minimap's addon list), or type `/altinv search`.
 
-On Retail, the *Lumber* tab (`/altinv lumber`) lists every lumber type and your Essence of Lumber with how much each character and the warband bank holds, so you can see who has Essence to trade at the neighborhood lumberjack (one Essence for 20 lumber of any type).
+![The Search tab, showing one character's bags](Docs/SearchAltInventory.png)
 
-## Search
+- **Search:** your characters sit down the left, grouped by realm with their class colour and item level. Type part of an item's name and every match is a card with the total, a bar of who holds most and every holder. Filter by place (bags, bank, mail, warband, currencies), sort by name or most held, and shift-click to link an item in chat. A number searches by item ID, and you can drop an item on the search box.
+- **See any character's bags:** click a character on the left to see their bags, bank, mail and the Warband Bank as icon grids, without logging in.
+- **Characters** (`/altinv characters`): total gold, characters seen, highest item level and cooldowns ready, then a table you can sort by item level, gold, bag space, reagent bag or last played. Hover a character for concentration, Moxie, profession cooldowns and this patch's currencies.
+- **Play time:** how long you've played on each character, and added up by class, role (from each character's current spec) or faction. A character's time is read when you log into it.
+- **Watch lists** (`/altinv watch`): built-in lists for Consumables and Trade goods, Lumber on Retail (with your Essence of Lumber on top, `/altinv lumber`), and lists of your own.
 
-Click the magnifier in your bags' search box or the Alt Inventory button on the minimap (also in the minimap's addon list), or type `/altinv search`, and type part of an item's name. Every match across all your characters is listed with a count per character and place. Filter by character or by place (bags, bank, mail, warband), sort by name or total, and shift-click to link an item in chat. A number searches by item ID, and you can drop an item on the search box.
+![The Characters tab](Docs/CharacterAltInvventory.png)
+
+Beside the profession window, the reagent finder lists who else holds the materials for the recipe or order on screen (`/altinv reagents` turns it off and on). Shift-drag a panel by its title to move the whole column, and Shift-right-click it to put it back; the spot is remembered.
 
 ## How it works
 
@@ -57,11 +63,14 @@ Mail with items or gold that expires within 3 days gets a warning when you log i
 ## Commands
 
 - `/altinv`, rescan now and list every tracked character with their gold and when their bank and mailbox were last opened.
-- `/altinv search`, open the search window. `/altinv find potion` opens it searching for "potion".
+- `/altinv search`, open the window. `/altinv find potion` opens it searching for "potion".
+- `/altinv characters`, open the Characters tab.
+- `/altinv watch`, open your watch lists.
 - `/altinv remove Name` (or `Name-Realm`), forget a deleted, renamed or transferred character.
 - `/altinv minimap`, show or hide the minimap button.
 - `/altinv mail`, list mail with items or gold expiring in the next 3 days. `/altinv mailwarn` turns the login warning off or on.
-- `/altinv lumber`, open the Lumber tab (Retail): every lumber type and Essence of Lumber on every character.
+- `/altinv lumber`, open the Lumber watch list (Retail): every lumber type and Essence of Lumber on every character.
+- `/altinv reagents`, turn the reagent finder off or on.
 
 ## Installation
 
@@ -76,7 +85,10 @@ Mail with items or gold that expires within 3 days gets a warning when you log i
 - `Core.lua`, saved-variable storage and scanning (bags, bank, mail, warband, item names).
 - `Tooltip.lua`, the tooltip lines.
 - `Search.lua`, finding items by name.
-- `UI/SearchWindow.lua`, the search window and the bag search button.
+- `Characters.lua`, `Played.lua`, per-character details and play time.
+- `UI/Skin.lua`, the window's colours, panels, buttons and lists.
+- `UI/SearchWindow.lua`, the window: title bar, tabs, status line, and the bag search button.
+- `UI/Pages/`, one file per tab: Search (with the bag viewer), Characters, Played and Watch.
 - `UI/MinimapButton.lua`, the minimap button and the addon list entry.
 - `AltInventory.lua`, events and the slash command.
 - `icon.tga`, addon icon shown in the in-game AddOn List.

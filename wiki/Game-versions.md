@@ -10,17 +10,18 @@ The same Alt Inventory works on:
 - **Burning Crusade Anniversary**
 - **Classic Era**, including Hardcore and Season of Discovery
 
-Each game version keeps its own saved data, as the game does, so your Classic characters and Retail characters are tracked separately.
+Each game version keeps its own saved data, as the game does, so your Classic characters and Retail characters are tracked separately. The window looks the same on all of them.
 
 ### What's different on Classic
 
 - **Keyring:** counted on Classic Era and Burning Crusade.
-- **Warband Bank:** only on Retail and WoW Forever. Classic has no Warband Bank, so it doesn't show up in tooltips or the search filter.
+- **Warband Bank:** only on Retail and WoW Forever. Classic has no Warband Bank, so it doesn't show up in tooltips, the search filter or the bag viewer.
+- **Lumber:** the built-in Lumber watch list is Retail only. Consumables, Trade goods and your own lists work everywhere.
 - **Currencies:** every currency counts per character, since Classic has nothing shared across the account.
 - **Play time:** on Classic Era, grouping by role isn't available because there are no specs.
 
 ---
 
-Previous: [Play time](Play-time.md) | [Wiki home](Home.md) | Next: [Commands](Commands.md)
+Previous: [Watch lists](Watch-lists.md) | [Wiki home](Home.md) | Next: [Commands](Commands.md)
 
 Didn't find your answer? Ask in the [CtrlShiftZed Discord](https://discord.gg/wz7fw6jM9Z).

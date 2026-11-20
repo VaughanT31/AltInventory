@@ -22,6 +22,10 @@ From 1.10.1 Alt Inventory spots a rename when you log in on that character and d
 
 Type `/altinv remove Name`, or `/altinv remove Name-Realm` if you have the same name on two realms.
 
+**Last played shows "-" for a character.**
+
+Last played is saved from 2.0 on. Log in on that character once and it fills in.
+
 **The minimap button is gone.**
 
 Type `/altinv minimap` to show it again. It's also in the minimap's addon list.

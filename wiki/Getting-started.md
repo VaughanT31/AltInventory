@@ -25,7 +25,7 @@ That's all. From then on every character sees every other character's items, and
 ### Where to find it
 
 - **Tooltips:** hover any item. See [Item tooltips](Item-tooltips.md).
-- **The window:** click the Alt Inventory button on the minimap, the magnifier in your bags' search box, or type `/altinv search`. See [Searching your characters](Searching-your-characters.md).
+- **The window:** click the Alt Inventory button on the minimap, the magnifier in your bags' search box, or type `/altinv search`. It has four tabs: **Search** (see [Searching your characters](Searching-your-characters.md)), **Characters** (see [Characters](Characters.md)), **Play time** (see [Play time](Play-time.md)) and **Watch lists** (see [Watch lists](Watch-lists.md)).
 
 ---
 

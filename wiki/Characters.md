@@ -1,29 +1,28 @@
 # Characters
 
-*Item level, bag space, concentration, Moxie, cooldowns and this patch's currencies for every character, and who holds a recipe's materials.*
+*Gold, item level, bag space and last played for every character, the details on hover, and who holds a recipe's materials.*
 
-Open the **Characters** tab in the Alt Inventory window, or type `/altinv characters`. Your current character comes first, then the rest by name.
+Open the **Characters** tab in the Alt Inventory window, or type `/altinv characters`.
 
-Each character shows:
+![Every character at a glance, sorted by item level](https://ctrlshiftzed.com/assets/img/shots/ai-characters.webp)
+*Every character at a glance, sorted by item level*
 
-- **Item level** of what they're wearing
-- **Bag slots free**, in red at 5 or fewer, and their reagent bag apart
-- **Concentration** for each profession, with *est.* when it's worked out from how long they've been away
-- **Moxie** for each profession
-- **Cooldowns** on profession recipes, or *ready*
-- **This patch's currencies** kept per character
+### The cards on top
 
-It's all as of the last time each character was on. Concentration and cooldowns show once you've opened that profession on that character.
+- **Total gold:** every character's gold added up, with the Warband Bank's where the game has one.
+- **Characters seen:** how many characters have logged in since the tab came in, out of all the characters Alt Inventory knows.
+- **Highest item level:** your best geared character, and who it is.
+- **Cooldowns ready:** profession cooldowns ready to use across all your characters.
 
-Only characters you've logged into since the tab came in (1.8.0) are listed; the rest join the list after their next login, and the bottom line says how many are waiting.
+### The table
 
-Click a character's name to fold them down to one line, and click again to open them. **Shift-click** folds or opens every character at once. Alt Inventory remembers which ones you folded.
+One row per character: **item level**, **gold**, **bag space** (a bar of how full their bags are), **reagent bag** where the game has one, and **last played**.
 
-### Lumber
+- **Click a column's title** to sort by it, and click again to flip the order.
+- **Hover a character** for the details: concentration for each profession (with *est.* when it's worked out from how long they've been away), Moxie, profession cooldowns and this patch's currencies.
+- **Click a character** to see their bags. See [Searching your characters](Searching-your-characters.md).
 
-On Retail, the **Lumber** tab (or `/altinv lumber`) lists every lumber type and your **Essence of Lumber**, with how much each character and the Warband Bank holds. Lumber and Essence are Warbound, so they move freely between your characters.
-
-Each Essence trades for 20 lumber of any type at your neighborhood lumberjack (Lestia Goldenstrike or Xiz'ro), and the line at the bottom says how much lumber yours is worth. The character, place and sort filters work here too.
+It's all as of the last time each character was on. Concentration and cooldowns show once you've opened that profession on that character. Characters that haven't logged in since the tab came in are greyed out until their next login, and the bottom line says how many are waiting. **Last played** fills in from 2.0 on, the next time you log in on each character.
 
 ### Reagent finder
 
