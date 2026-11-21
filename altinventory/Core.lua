@@ -113,11 +113,28 @@ local function ScanContainer(bagID, target)
     end
 end
 
+-- The character's name as the game shows it. On WoW Forever every character
+-- has a surname too, and two characters can share a first name, so it's
+-- "First Surname" there. UnitName("player") gives the surname as its second
+-- value on Forever; everywhere else that slot is the realm, which is always
+-- nil for your own character, so nothing changes on the other versions.
+local function PlayerName()
+    local name, surname = UnitName("player")
+    if not name or name == "" then return nil end
+    if type(surname) == "string" and surname ~= "" and surname ~= GetRealmName()
+        and surname ~= GetNormalizedRealmName() then
+        local sep = Constants and Constants.CharacterNameSeparatorConsts
+            and Constants.CharacterNameSeparatorConsts.CHARACTERNAME_SURNAME_SEPARATOR or " "
+        name = name .. sep .. surname
+    end
+    return name
+end
+
 -- Remembered once known: at logout the game can return nil for the realm.
 local charKey
 function ns.GetCharKey()
     if charKey then return charKey end
-    local name = UnitName("player")
+    local name = PlayerName()
     local realm = GetNormalizedRealmName() or (GetRealmName() or ""):gsub("[%s%-]", "")
     if not name or realm == "" then return nil end
     charKey = name .. "-" .. realm
@@ -125,18 +142,39 @@ function ns.GetCharKey()
 end
 
 -- A renamed character keeps its GUID, so an older entry with the same GUID
--- under another name is this character before the rename: drop it, keeping
--- whether it was folded on the Characters tab. Checked once per session.
+-- under another name is this character before the rename: its saved data
+-- moves to the new name (or is dropped if the new name already has some),
+-- keeping whether it was folded on the Characters tab. Checked once per
+-- session.
+--
+-- Before 2.0.1, Forever characters were saved under their first name only,
+-- so two characters with the same first name shared one entry. When that old
+-- entry moves to "First Surname", its bank and mail may be the other
+-- character's, so those are cleared until this character opens them again.
 local renameChecked = false
 local function DropOldNames(key, guid)
     if renameChecked or not guid then return end
     renameChecked = true
+    local first, realm = key:match("^([^%s%-]+)%s.-%-(.+)$")
+    local firstOnly = first and (first .. "-" .. realm)
+    -- Collected first: adding a key while looping with pairs isn't allowed.
+    local found = {}
     for other, data in pairs(AltInventoryDB.chars) do
-        if other ~= key and data.guid == guid then
-            AltInventoryDB.chars[other] = nil
-            if AltInventoryDB.collapsed[other] then AltInventoryDB.collapsed[key] = true end
-            AltInventoryDB.collapsed[other] = nil
+        if other ~= key and data.guid == guid then found[#found + 1] = other end
+    end
+    for _, other in ipairs(found) do
+        local data = AltInventoryDB.chars[other]
+        if not AltInventoryDB.chars[key] then
+            AltInventoryDB.chars[key] = data
+            if other == firstOnly then
+                data.bank, data.mail = {}, {}
+                data.bankScannedAt, data.mailScannedAt = nil, nil
+                data.mailExpiry, data.mailItemExpiry = nil, nil
+            end
         end
+        AltInventoryDB.chars[other] = nil
+        if AltInventoryDB.collapsed[other] then AltInventoryDB.collapsed[key] = true end
+        AltInventoryDB.collapsed[other] = nil
     end
 end
 

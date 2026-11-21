@@ -22,6 +22,10 @@ From 1.10.1 Alt Inventory spots a rename when you log in on that character and d
 
 Type `/altinv remove Name`, or `/altinv remove Name-Realm` if you have the same name on two realms.
 
+**Two of my WoW Forever characters with the same first name show as one.**
+
+Update to 2.0.1 or later and log in on each of them once: they're saved under their full name from then on. Open the bank and mailbox once on each too, so their counts are their own again. To forget one, type `/altinv remove First Surname`.
+
 **Last played shows "-" for a character.**
 
 Last played is saved from 2.0 on. Log in on that character once and it fills in.

@@ -6,12 +6,12 @@ A lightweight World of Warcraft addon that shows, in an item's tooltip, how many
 
 Built as a minimal alternative to TradeSkillMaster's inventory tooltip, without TSM's memory footprint or crash surface.
 
-- **Version:** 2.0.0
+- **Version:** 2.0.1
 - **Interface versions:** `120105` (Retail), `16001` (WoW Forever), `50504` (Mists Classic), `20506` (Burning Crusade Anniversary), `11509` (Classic Era)
 
 ## Game versions
 
-One download runs on every version: Retail, WoW Forever, Mists of Pandaria Classic, Burning Crusade Anniversary and Classic Era (Hardcore and Season of Discovery too). Each version keeps its own saved data, as the game does. On Classic the keyring is counted (Classic Era and Burning Crusade), every currency counts per character, and the Warband Bank only shows where the game has one (Retail and WoW Forever).
+One download runs on every version: Retail, WoW Forever, Mists of Pandaria Classic, Burning Crusade Anniversary and Classic Era (Hardcore and Season of Discovery too). Each version keeps its own saved data, as the game does. On WoW Forever characters are tracked by their full name, first name and surname, so two with the same first name stay apart. On Classic the keyring is counted (Classic Era and Burning Crusade), every currency counts per character, and the Warband Bank only shows where the game has one (Retail and WoW Forever).
 
 ## What it does
 

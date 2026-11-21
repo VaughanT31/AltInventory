@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1
+
+- **Surnames on WoW Forever:** characters are now saved under their full name, first name and surname, so two characters with the same first name each get their own line in tooltips, search, the bag viewer and every tab instead of sharing one. Each character moves over the next time you log in on it, keeping its gold, play time and the rest. If two of yours shared a first name, open the bank and mailbox once on each so their counts are their own again. Nothing changes on Retail or the Classic versions.
+
 ## 2.0.0
 
 **A new look.** The Alt Inventory window has been redesigned from the ground up: wider, darker and easier to read, with the same look on Retail, WoW Forever and every Classic version.

@@ -9,7 +9,7 @@
 | `/altinv find potion` | Open the window searching for "potion" |
 | `/altinv characters` | Open the Characters tab |
 | `/altinv watch` | Open your watch lists |
-| `/altinv remove Name` | Forget a deleted, renamed or transferred character (`Name-Realm` works too) |
+| `/altinv remove Name` | Forget a deleted, renamed or transferred character (`Name-Realm` works too, and on WoW Forever the full name, like `First Surname`) |
 | `/altinv minimap` | Show or hide the minimap button |
 | `/altinv lumber` | Open the Lumber watch list (Retail) |
 | `/altinv reagents` | Turn the reagent finder off or on |

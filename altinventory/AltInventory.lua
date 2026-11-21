@@ -106,7 +106,7 @@ local function RemoveCharacter(input)
     local key, matchCount = FindCharacter(input)
     if not key then
         if matchCount and matchCount > 1 then
-            Print("More than one " .. input .. ", use Name-Realm.")
+            Print("More than one " .. input .. ", use their full name or Name-Realm.")
         else
             Print("No tracked character called " .. input .. ".")
         end

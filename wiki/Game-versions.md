@@ -12,6 +12,10 @@ The same Alt Inventory works on:
 
 Each game version keeps its own saved data, as the game does, so your Classic characters and Retail characters are tracked separately. The window looks the same on all of them.
 
+### Surnames on WoW Forever
+
+Every character on WoW Forever has a surname as well as a first name, and two of yours can share a first name. Alt Inventory keeps them apart by their full name, so tooltips, search and every tab show "First Surname". Characters saved before 2.0.1 move over to their full name the next time you log in on them.
+
 ### What's different on Classic
 
 - **Keyring:** counted on Classic Era and Burning Crusade.
