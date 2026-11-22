@@ -34,6 +34,10 @@ Last played is saved from 2.0 on. Log in on that character once and it fills in.
 
 Type `/altinv minimap` to show it again. It's also in the minimap's addon list.
 
+**My characters don't show up, or nothing is saved.**
+
+Type `/altinv debug` and paste the lines it prints into a comment on CurseForge or on [Discord](https://discord.gg/wz7fw6jM9Z). They show the addon and game version, what the game reports for your character, what's saved and any error at login, which is everything needed to track it down. Saved data is written when you log out or type `/reload`, so if the game closes unexpectedly that session isn't kept.
+
 **Does it slow the game down?**
 
 No. It was built as a light alternative to TradeSkillMaster's inventory tooltip: it only reads your bags when they change, and the tooltip lines are a quick lookup.

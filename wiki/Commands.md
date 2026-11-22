@@ -15,6 +15,7 @@
 | `/altinv reagents` | Turn the reagent finder off or on |
 | `/altinv mail` | List mail with items or gold expiring in the next 3 days |
 | `/altinv mailwarn` | Turn the expiring mail warning on login off or on |
+| `/altinv debug` | Print what the addon sees, to paste into a bug report |
 
 ---
 

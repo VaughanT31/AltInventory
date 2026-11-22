@@ -18,6 +18,19 @@ local _, ns = ...
 
 local bankOpen = false
 
+-- Errors from the login steps, kept for /altinv debug. Each step runs on its
+-- own so one failing can't stop the rest; the error still goes to the game's
+-- error handler (and BugSack) as usual.
+local loginErrors = {}
+local function Try(label, fn, ...)
+    local ok, err = pcall(fn, ...)
+    if not ok then
+        loginErrors[#loginErrors + 1] = label .. ": " .. tostring(err)
+        local handler = geterrorhandler and geterrorhandler()
+        if handler then handler(err) end
+    end
+end
+
 -- ---------------------------------------------------------------------
 -- Slash command
 --
@@ -28,6 +41,7 @@ local bankOpen = false
 --   /altinv minimap      show or hide the minimap button
 --   /altinv lumber       open the Lumber tab (Retail)
 --   /altinv mail         list mail expiring in the next 3 days
+--   /altinv debug        what the addon sees, to paste into a bug report
 --   /altinv mailwarn     turn the login warning about expiring mail off or on
 -- ---------------------------------------------------------------------
 
@@ -121,6 +135,38 @@ local function RemoveCharacter(input)
     Print("Removed " .. key .. ".")
 end
 
+-- Everything useful for a bug report, in one chat block.
+local function Debug()
+    local function Show(v)
+        if issecretvalue and issecretvalue(v) then return "(secret)" end
+        if v == nil then return "nil" end
+        return '"' .. tostring(v) .. '"'
+    end
+    local version = C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata("AltInventory", "Version")
+        or (GetAddOnMetadata and GetAddOnMetadata("AltInventory", "Version")) or "?"
+    local gameVersion, build, _, interface = GetBuildInfo()
+    Print(("debug: version %s, game %s (%s), interface %s, project %s"):format(
+        tostring(version), tostring(gameVersion), tostring(build), tostring(interface), tostring(WOW_PROJECT_ID)))
+    local name, second = UnitName("player")
+    Print(("debug: name %s %s, realm %s, normalized %s"):format(Show(name), Show(second),
+        Show(GetRealmName()), Show(GetNormalizedRealmName and GetNormalizedRealmName())))
+    local key = ns.GetCharKey()
+    local db = AltInventoryDB
+    local chars = type(db) == "table" and type(db.chars) == "table" and db.chars or nil
+    local count = 0
+    if chars then for _ in pairs(chars) do count = count + 1 end end
+    local mine = chars and key and chars[key]
+    local items = 0
+    if mine and mine.bags then for _ in pairs(mine.bags) do items = items + 1 end end
+    Print(("debug: key %s, saved data %s, characters %d, this one saved %s, different items in its bags %d"):format(
+        Show(key), type(db), count, mine and "yes" or "no", items))
+    if #loginErrors == 0 then
+        Print("debug: no errors at login")
+    else
+        for _, err in ipairs(loginErrors) do Print("debug: error " .. err) end
+    end
+end
+
 SLASH_ALTINVENTORY1 = "/altinv"
 SlashCmdList.ALTINVENTORY = function(msg)
     local cmd, rest = (msg or ""):match("^%s*(%S*)%s*(.-)%s*$")
@@ -138,6 +184,8 @@ SlashCmdList.ALTINVENTORY = function(msg)
     elseif cmd == "lumber" and WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
         ns.SearchWindow:Open()
         ns.SearchWindow:SetView("watch", "lumber")
+    elseif cmd == "debug" then
+        Debug()
     elseif cmd == "mail" then
         WarnExpiringMail(true)
     elseif cmd == "mailwarn" then
@@ -175,6 +223,7 @@ SlashCmdList.ALTINVENTORY = function(msg)
         Print("/altinv mailwarn - turn the expiring mail warning on login off or on")
         Print("/altinv reagents - turn the reagent finder off or on")
         Print("/altinv minimap - show or hide the minimap button")
+        Print("/altinv debug - what the addon sees, to paste into a bug report")
     end
 end
 
@@ -234,19 +283,19 @@ end
 
 frame:SetScript("OnEvent", function(_, event, ...)
     if event == "PLAYER_LOGIN" then
-        ns.InitDB()
-        ns.ScanBags()
-        ns.TidyNames()
-        ns.NoteSeen()
-        ns.SearchWindow:AddBagButton()
-        ns.MinimapButton:Create()
-        ns.ScanMoney()
-        ns.ScanWarbandMoney()
-        ns.ReagentFinder:Init()
+        Try("saved data", ns.InitDB)
+        Try("bags", ns.ScanBags)
+        Try("item names", ns.TidyNames)
+        Try("last played", ns.NoteSeen)
+        Try("bag button", ns.SearchWindow.AddBagButton, ns.SearchWindow)
+        Try("minimap button", ns.MinimapButton.Create, ns.MinimapButton)
+        Try("gold", ns.ScanMoney)
+        Try("warband gold", ns.ScanWarbandMoney)
+        Try("reagent finder", ns.ReagentFinder.Init, ns.ReagentFinder)
         -- The currency list fills in a moment after login.
         QueueCurrencyScan()
-        C_Timer.After(3, ns.Characters.ScanAll)
-        ns.Played:Note()
+        C_Timer.After(3, function() Try("characters", ns.Characters.ScanAll) end)
+        Try("play time", ns.Played.Note, ns.Played)
         -- After other addons' login requests, so the answer is ours.
         C_Timer.After(6, function() ns.Played:Request(true) end)
         -- Once login chat has settled.

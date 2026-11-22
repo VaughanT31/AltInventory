@@ -6,7 +6,7 @@ A lightweight World of Warcraft addon that shows, in an item's tooltip, how many
 
 Built as a minimal alternative to TradeSkillMaster's inventory tooltip, without TSM's memory footprint or crash surface.
 
-- **Version:** 2.0.1
+- **Version:** 2.0.2
 - **Interface versions:** `120105` (Retail), `16001` (WoW Forever), `50504` (Mists Classic), `20506` (Burning Crusade Anniversary), `11509` (Classic Era)
 
 ## Game versions
@@ -71,6 +71,7 @@ Mail with items or gold that expires within 3 days gets a warning when you log i
 - `/altinv mail`, list mail with items or gold expiring in the next 3 days. `/altinv mailwarn` turns the login warning off or on.
 - `/altinv lumber`, open the Lumber watch list (Retail): every lumber type and Essence of Lumber on every character.
 - `/altinv reagents`, turn the reagent finder off or on.
+- `/altinv debug`, print what the addon sees (versions, your character's name and realm, what's saved, any error at login) to paste into a bug report.
 
 ## Installation
 

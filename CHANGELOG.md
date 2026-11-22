@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.2
+
+- **More reliable login:** each thing Alt Inventory does when you log in now runs on its own, so if one part hits a problem the rest (saving your bags, gold, play time and so on) still happens.
+- **New `/altinv debug`:** if your characters aren't showing up or saving, type it and paste the lines it prints into a comment. It shows the addon and game version, what the game reports for your character's name and realm, what's saved, and any error at login.
+
 ## 2.0.1
 
 - **Surnames on WoW Forever:** characters are now saved under their full name, first name and surname, so two characters with the same first name each get their own line in tooltips, search, the bag viewer and every tab instead of sharing one. Each character moves over the next time you log in on it, keeping its gold, play time and the rest. If two of yours shared a first name, open the bank and mailbox once on each so their counts are their own again. Nothing changes on Retail or the Classic versions.
