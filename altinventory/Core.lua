@@ -130,13 +130,54 @@ local function PlayerName()
     return name
 end
 
+-- The server part of a player GUID ("Player-<server>-<id>"), the same for
+-- every character on one server.
+local function ServerOf(guid)
+    return type(guid) == "string" and guid:match("^Player%-(%d+)%-") or nil
+end
+
+-- Since WoW Forever 1.60.1 (71037) the game can report an empty realm name.
+-- Then the realm is the one this character, or another character on the
+-- same server, was saved under before, so existing characters keep their
+-- place; a brand new server with nothing saved shows as "Forever".
+local function FallbackRealm()
+    local db = AltInventoryDB
+    local guid = UnitGUID("player")
+    local server = ServerOf(guid)
+    if type(db) == "table" and type(db.chars) == "table" then
+        local sameServer
+        for key, data in pairs(db.chars) do
+            local realm = key:match("%-(.+)$")
+            if realm and realm ~= "" and type(data) == "table" then
+                if guid and data.guid == guid then return realm end
+                if server and not sameServer and ServerOf(data.guid) == server then sameServer = realm end
+            end
+        end
+        if sameServer then return sameServer end
+    end
+    return "Forever"
+end
+
+local function RealmName()
+    local realm = GetNormalizedRealmName and GetNormalizedRealmName()
+    if type(realm) ~= "string" or realm == "" then
+        realm = (GetRealmName() or ""):gsub("[%s%-]", "")
+    end
+    return realm
+end
+
 -- Remembered once known: at logout the game can return nil for the realm.
 local charKey
 function ns.GetCharKey()
     if charKey then return charKey end
     local name = PlayerName()
-    local realm = GetNormalizedRealmName() or (GetRealmName() or ""):gsub("[%s%-]", "")
-    if not name or realm == "" then return nil end
+    if not name then return nil end
+    local realm = RealmName()
+    if realm == "" then
+        -- Saved data isn't loaded before PLAYER_LOGIN, so wait for it.
+        if type(AltInventoryDB) ~= "table" then return nil end
+        realm = FallbackRealm()
+    end
     charKey = name .. "-" .. realm
     return charKey
 end
@@ -180,6 +221,8 @@ end
 
 local function GetCharData()
     local key = ns.GetCharKey()
+    -- No name from the game yet: nothing is saved, but nothing errors either.
+    if not key then return { bags = {}, bank = {}, mail = {} } end
     local guid = UnitGUID("player")
     DropOldNames(key, guid)
     local data = AltInventoryDB.chars[key]

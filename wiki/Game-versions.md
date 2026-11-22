@@ -16,6 +16,8 @@ Each game version keeps its own saved data, as the game does, so your Classic ch
 
 Every character on WoW Forever has a surname as well as a first name, and two of yours can share a first name. Alt Inventory keeps them apart by their full name, so tooltips, search and every tab show "First Surname". Characters saved before 2.0.1 move over to their full name the next time you log in on them.
 
+Since the 1.60.1 update WoW Forever doesn't tell addons your realm's name. From 2.0.3 each character stays under the realm it was listed under before, and characters on a server with nothing saved yet are listed under "Forever".
+
 ### What's different on Classic
 
 - **Keyring:** counted on Classic Era and Burning Crusade.

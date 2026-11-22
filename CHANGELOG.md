@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.3
+
+- **Fixed on WoW Forever:** since the latest WoW Forever update the game no longer gives addons your realm's name, so nothing was saved and your characters stopped updating. Characters save again: each one keeps the realm it was listed under before, and characters on a server with nothing saved yet are listed under "Forever". Log in on each character once to bring it up to date.
+
 ## 2.0.2
 
 - **More reliable login:** each thing Alt Inventory does when you log in now runs on its own, so if one part hits a problem the rest (saving your bags, gold, play time and so on) still happens.
