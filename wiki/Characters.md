@@ -30,6 +30,6 @@ With a profession window open, a small panel beside it lists which other charact
 
 ---
 
-Previous: [Gold and currencies](Gold-and-currencies.md) | [Wiki home](Home.md) | Next: [Play time](Play-time.md)
+Previous: [Gold and currencies](Gold-and-currencies.md) | [Wiki home](Home.md) | Next: [Gold over time](Gold-over-time.md)
 
 Didn't find your answer? Ask in the [CtrlShiftZed Discord](https://discord.gg/wz7fw6jM9Z).

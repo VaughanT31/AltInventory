@@ -181,6 +181,12 @@ SlashCmdList.ALTINVENTORY = function(msg)
     elseif cmd == "watch" then
         ns.SearchWindow:Open()
         ns.SearchWindow:SetView("watch")
+    elseif cmd == "weekly" or cmd == "week" then
+        ns.SearchWindow:Open()
+        ns.SearchWindow:SetView("weekly")
+    elseif cmd == "gold" then
+        ns.SearchWindow:Open()
+        ns.SearchWindow:SetView("gold")
     elseif cmd == "lumber" and WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
         ns.SearchWindow:Open()
         ns.SearchWindow:SetView("watch", "lumber")
@@ -216,6 +222,8 @@ SlashCmdList.ALTINVENTORY = function(msg)
         Print("/altinv remove Name - forget a character")
         Print("/altinv characters - gold, item level, bag space and last played for every character")
         Print("/altinv watch - your watch lists, plus consumables and trade goods")
+        Print("/altinv weekly - every character's Great Vault, keys and raid lockouts this week")
+        Print("/altinv gold - your gold over time, all of it, the warband or one character")
         if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
             Print("/altinv lumber - lumber and Essence of Lumber on every character")
         end

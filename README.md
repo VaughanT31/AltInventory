@@ -39,6 +39,8 @@ Click the magnifier in your bags' search box or the Alt Inventory button on the 
 - **Characters** (`/altinv characters`): total gold, characters seen, highest item level and cooldowns ready, then a table you can sort by item level, gold, bag space, reagent bag or last played. Hover a character for concentration, Moxie, profession cooldowns and this patch's currencies.
 - **Play time:** how long you've played on each character, and added up by class, role (from each character's current spec) or faction. A character's time is read when you log into it.
 - **Watch lists** (`/altinv watch`): built-in lists for Consumables and Trade goods, Lumber on Retail (with your Essence of Lumber on top, `/altinv lumber`), and lists of your own.
+- **Weekly** (`/altinv weekly`): every character's Great Vault progress, Mythic+ keys this week and raid lockouts, with vault rewards waiting after the reset. Raid lockouts on every game version.
+- **Gold** (`/altinv gold`): gold over time as a chart, for all your gold, the Warband Bank or one character, over 30 days, 90 days or a year.
 
 ![The Characters tab](Docs/CharacterAltInvventory.png)
 
@@ -66,6 +68,8 @@ Mail with items or gold that expires within 3 days gets a warning when you log i
 - `/altinv search`, open the window. `/altinv find potion` opens it searching for "potion".
 - `/altinv characters`, open the Characters tab.
 - `/altinv watch`, open your watch lists.
+- `/altinv weekly`, every character's vault, keys and raid lockouts this week.
+- `/altinv gold`, your gold over time.
 - `/altinv remove Name` (or `Name-Realm`), forget a deleted, renamed or transferred character.
 - `/altinv minimap`, show or hide the minimap button.
 - `/altinv mail`, list mail with items or gold expiring in the next 3 days. `/altinv mailwarn` turns the login warning off or on.

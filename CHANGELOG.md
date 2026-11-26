@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0
+
+- **New Weekly tab** (`/altinv weekly`): every character's week on one page. The Great Vault's raid, dungeon and world rows as three pips each (gold when unlocked), the Mythic+ keys done this week with the highest on show, and raid lockouts with bosses down and when they reset. Cards on top add up vault rewards waiting, keys this week, raid bosses down and the time to the weekly reset. Hover a character for every vault slot with its reward item level, every key and every lockout. After the reset, characters with vault rewards to collect are marked. On WoW Forever and the Classic versions the raid lockouts show.
+- **New Gold tab** (`/altinv gold`): your gold over time as a chart, for all your gold, the Warband Bank or any one character, over 30 days, 90 days or a year (by week). Hover a bar for that day's gold and the change, and the list under it shows each character's gold now and how much it changed. Gold is noted each day a character's gold is read, starting now.
+- Ready for patch 12.1.7.
+
 ## 2.0.3
 
 - **Fixed on WoW Forever:** since the latest WoW Forever update the game no longer gives addons your realm's name, so nothing was saved and your characters stopped updating. Characters save again: each one keeps the realm it was listed under before, and characters on a server with nothing saved yet are listed under "Forever". Log in on each character once to bring it up to date.
