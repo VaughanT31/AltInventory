@@ -44,6 +44,10 @@ Click the magnifier in your bags' search box or the Alt Inventory button on the 
 
 ![The Characters tab](Docs/CharacterAltInvventory.png)
 
+![The Weekly tab](Docs/WeeklyAltInventory.png)
+
+![The Gold tab](Docs/GoldAltInventory.png)
+
 Beside the profession window, the reagent finder lists who else holds the materials for the recipe or order on screen (`/altinv reagents` turns it off and on). Shift-drag a panel by its title to move the whole column, and Shift-right-click it to put it back; the spot is remembered.
 
 ## How it works
